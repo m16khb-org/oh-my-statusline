@@ -135,11 +135,13 @@ export function statusRows(snapshot: StatusSnapshot, options: Options, width: nu
 		nowMs,
 		theme: options.theme,
 		glyphs: options.glyphs,
-		colors: 24,
+		colors: options.colors,
 		measure,
 		// The minimum applies to the terminal, checked above, not to the space left after the reserve.
 		minimumWidth: 0,
 	});
+	// Without color the TUI gets plain text runs: no foreground, background or bold.
+	if (options.colors === 0) return rows.map((row) => row.map((cell) => ({ text: cell.text })));
 	return rows.map((row) =>
 		row.map((cell) => ({
 			text: cell.text,

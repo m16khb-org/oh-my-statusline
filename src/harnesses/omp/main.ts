@@ -105,10 +105,7 @@ function installedGlyphs(): "plain" | "powerline" | undefined {
 /** The shared configuration, with the installed glyph mode as the lowest layer. */
 function loadConfig(env: Record<string, string | undefined>): Config {
 	const glyphs = installedGlyphs();
-	const base: Record<string, unknown> = glyphs ? { glyphs } : {};
-	const toml = readConfigFile(defaultConfigPath(env));
-	const raw = toml && "raw" in toml && typeof toml.raw === "object" && toml.raw !== null ? toml.raw : {};
-	return resolveConfig({ harness: "omp", file: { raw: { ...base, ...raw } }, env, flags: {} }).config;
+	return resolveConfig({ harness: "omp", installed: glyphs ? { glyphs } : {}, file: readConfigFile(defaultConfigPath(env)), env, flags: {} }).config;
 }
 
 /** Settings scopes already overridden; subagent sessions rebind the factory in the same process. */

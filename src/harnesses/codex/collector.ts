@@ -108,13 +108,15 @@ export async function collect(runDir: string, env: Record<string, string | undef
 	const codexHome = env.CODEX_HOME || path.join(env.HOME || homedir(), ".codex");
 	const clock = { now: () => Date.now() };
 	const appearance = new AppearanceAdapter(new FileCache(path.join(runDir, "cache"), clock), clock);
-	// The installer's "plain" choice is the default; the config file, environment and flags stay above it.
+	// The installer's glyph choice and tmux's 24-bit colors are defaults; the config file, the
+	// environment (STATUSLINE_*, NO_COLOR) and flags stay above them.
 	const installed = readManifest(ROOT);
 	const { config } = resolveConfig({
 		harness: "codex",
+		installed: { colors: "truecolor", ...(installed.glyphs === "plain" ? { glyphs: "plain" as const } : {}) },
 		file: readConfigFile(defaultConfigPath(env)),
 		env,
-		flags: { colors: "truecolor", ...(installed.glyphs === "plain" && !env.STATUSLINE_GLYPHS ? { glyphs: "plain" as const } : {}) },
+		flags: {},
 	});
 
 	// The tmux chip describes the user's OUTER tmux, recorded at launch, never Codex's private server.

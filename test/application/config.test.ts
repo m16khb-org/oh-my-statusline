@@ -25,6 +25,16 @@ describe("resolveConfig", () => {
 		expect(warnings).toEqual([]);
 	});
 
+	test("install choices sit between the defaults and the config file", () => {
+		const installed = { glyphs: "plain" as const, colors: "truecolor" as const };
+		expect(resolveConfig({ harness: "codex", installed, file: null, env: {}, flags: {} }).config).toMatchObject(installed);
+		const file = { raw: { glyphs: "ascii" } };
+		expect(resolveConfig({ harness: "codex", installed, file, env: {}, flags: {} }).config.glyphs).toBe("ascii");
+		expect(resolveConfig({ harness: "codex", installed, file, env: { STATUSLINE_COLORS: "256" }, flags: {} }).config.colors).toBe("256");
+		// A corrupt config file keeps the install choices.
+		expect(resolveConfig({ harness: "codex", installed, file: { error: "bad" }, env: {}, flags: {} }).config.glyphs).toBe("plain");
+	});
+
 	test("precedence: default < file < harness table < env < flags, invalid values ignored", () => {
 		const resolve = (harness: "omp" | "claude", env: Record<string, string>, flags = {}) =>
 			resolveConfig({ harness, file: FILE, env, flags });

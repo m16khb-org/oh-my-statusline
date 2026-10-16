@@ -4,7 +4,7 @@
 // may assume `Bun`: commands go through nodeRunner and PATH lookups through nodeWhich. Today's
 // cost runs in a child `bun` process (the collector needs bun:sqlite and blocks while reading).
 
-import { type Config, resolveConfig } from "../../application/config.ts";
+import { type Config, type ConfigOverrides, resolveConfig } from "../../application/config.ts";
 import { Ambient } from "../../infrastructure/ambient.ts";
 import { defaultConfigPath, readConfigFile } from "../../infrastructure/config-file.ts";
 import { EnvAdapter } from "../../infrastructure/env-chips.ts";
@@ -16,8 +16,8 @@ import { nodeRunner, nodeWhich } from "./runtime.ts";
 type Env = Record<string, string | undefined>;
 
 /** The shared configuration (config.toml, environment); defaults when the file cannot be read. */
-export function loadConfig(env: Env): Config {
-	return resolveConfig({ harness: "opencode", file: readConfigFile(defaultConfigPath(env)), env, flags: {} }).config;
+export function loadConfig(env: Env, installed: ConfigOverrides = {}): Config {
+	return resolveConfig({ harness: "opencode", installed, file: readConfigFile(defaultConfigPath(env)), env, flags: {} }).config;
 }
 
 export function createAmbient(env: Env = process.env as Env, exec: CommandRunner = nodeRunner): Ambient {

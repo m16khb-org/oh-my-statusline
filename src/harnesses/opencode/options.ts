@@ -1,11 +1,15 @@
 // The plugin options a user sets in cli.json: `{ "package": "./oh-my-statusline", "options": { ... } }`.
-// `theme` is not an option: the TUI reports its own light/dark mode.
+// `theme` is not an option: the TUI reports its own light/dark mode. Glyphs and colors come from
+// the shared config (config.toml, STATUSLINE_*, NO_COLOR), with cli.json's `glyphs` (written by the
+// installer) as its install-time default.
 
-import type { GlyphMode, ThemeName } from "../../domain/render/cells.ts";
+import type { ColorMode, GlyphMode, ThemeName } from "../../domain/render/cells.ts";
 
 export interface Options {
 	theme: ThemeName;
 	glyphs: GlyphMode;
+	/** 24-bit, or 0 when NO_COLOR / `colors = "none"` turns color off. */
+	colors: ColorMode;
 	/** One switch per chip or stat; a disabled one is left out of the snapshot. */
 	model: boolean;
 	effort: boolean;
@@ -40,18 +44,26 @@ function number(raw: Readonly<Record<string, unknown>>, key: string, fallback: n
 	return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+/** The shared config's part of the options. */
+export interface SharedOptions {
+	glyphs?: GlyphMode;
+	colors?: ColorMode;
+	subagents?: boolean;
+}
+
 /** Normalize the plugin options; anything missing or of the wrong type takes its default. */
-export function readOptions(raw: Readonly<Record<string, unknown>> = {}, theme: ThemeName = "dark", subagents = true): Options {
+export function readOptions(raw: Readonly<Record<string, unknown>> = {}, theme: ThemeName = "dark", shared: SharedOptions = {}): Options {
 	return {
 		theme,
-		glyphs: raw.glyphs === "plain" ? "plain" : "powerline",
+		glyphs: shared.glyphs ?? (raw.glyphs === "plain" || raw.glyphs === "ascii" ? raw.glyphs : "powerline"),
+		colors: shared.colors ?? 24,
 		model: flag(raw, "model", true),
 		effort: flag(raw, "effort", true),
 		dir: flag(raw, "dir", true),
 		git: flag(raw, "git", true),
 		lines: flag(raw, "lines", true),
 		counts: flag(raw, "counts", true),
-		subagents,
+		subagents: shared.subagents ?? true,
 		cost: flag(raw, "cost", true),
 		elapsed: flag(raw, "elapsed", true),
 		context: flag(raw, "context", true),

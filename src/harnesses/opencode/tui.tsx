@@ -16,10 +16,11 @@
 import { Plugin } from "@opencode/plugin/tui";
 import type { Context, SlotMap } from "@opencode/plugin/tui/context";
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { colorDepth } from "../../application/config.ts";
 import type { Ambient, AmbientReading } from "../../infrastructure/ambient.ts";
 import { createAmbient, loadConfig } from "./ambient.ts";
 import { GitWatcher, NO_GIT, type GitView } from "./git-watcher.ts";
-import { type Options, readOptions } from "./options.ts";
+import { type Options, readOptions, type SharedOptions } from "./options.ts";
 import { nodeRunner } from "./runtime.ts";
 import { demoInput, toStatusSnapshot, type StatusInput } from "./snapshot.ts";
 import { footerVisible, homeDirectory, homeInput, type Run, sessionDirectory, sessionInput, statusRows, terminalWidth } from "./view.ts";
@@ -37,12 +38,20 @@ function useGit(directory: () => string | undefined, options: () => Options) {
 }
 
 let shared: Ambient | undefined;
-let subagents: boolean | undefined;
+let sharedOptions: SharedOptions | undefined;
 
-/** The shared config's `subagents` switch, read once per process like the ambient reads. */
-function subagentsEnabled(): boolean {
-	subagents ??= loadConfig(process.env as Record<string, string | undefined>).subagents;
-	return subagents;
+/**
+ * Glyphs, colors and the `subagents` switch from the shared config, read once per process like the
+ * ambient reads; cli.json's `glyphs` (what the installer wrote) is the install-time default.
+ */
+function sharedConfig(raw: Readonly<Record<string, unknown>>): SharedOptions {
+	if (!sharedOptions) {
+		const env = process.env as Record<string, string | undefined>;
+		const glyphs = raw.glyphs === "plain" || raw.glyphs === "ascii" ? raw.glyphs : undefined;
+		const config = loadConfig(env, glyphs ? { glyphs } : {});
+		sharedOptions = { glyphs: config.glyphs, colors: colorDepth(config, env) === 0 ? 0 : 24, subagents: config.subagents };
+	}
+	return sharedOptions;
 }
 
 /**
@@ -124,7 +133,7 @@ function Statusline(props: { readonly context: Context; readonly input: () => St
 
 /** Below the prompt of an open session: two rows. */
 function SessionStatusline(props: { readonly context: Context; readonly input: FooterInput }) {
-	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode, subagentsEnabled()));
+	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode, sharedConfig(props.context.options)));
 	const git = useGit(() => sessionDirectory(props.context, props.input.sessionID), options);
 	const ambient = useAmbient(() => sessionDirectory(props.context, props.input.sessionID), git);
 	const input = createMemo(() => {
@@ -140,7 +149,7 @@ function SessionStatusline(props: { readonly context: Context; readonly input: F
 
 /** On the home screen: the same chips, one row. */
 function HomeStatusline(props: { readonly context: Context }) {
-	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode, subagentsEnabled()));
+	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode, sharedConfig(props.context.options)));
 	const git = useGit(() => homeDirectory(props.context), options);
 	const ambient = useAmbient(() => homeDirectory(props.context), git);
 	const input = createMemo(() => homeInput(props.context, git(), ambient()));

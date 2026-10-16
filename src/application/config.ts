@@ -1,6 +1,7 @@
 // Configuration: the model, and the pure resolution of its layers. Reading the TOML file and
 // the environment is infrastructure's job; this module only merges what it is handed.
-// Precedence, lowest to highest: defaults < file top level < file [harness.<id>] < env < flags.
+// Precedence, lowest to highest: defaults < install choices < file top level < file
+// [harness.<id>] < env < flags.
 
 import type { HarnessId } from "../domain/model/snapshot.ts";
 import type { ColorMode, GlyphMode } from "../domain/render/cells.ts";
@@ -30,6 +31,8 @@ export type ConfigFile = { raw: unknown } | { error: string };
 
 export interface ResolveInput {
 	harness: HarnessId;
+	/** Choices the installer recorded (e.g. `--plain`); the config file and above override them. */
+	installed?: ConfigOverrides;
 	/** null when there is no config file. */
 	file: ConfigFile | null;
 	env: Record<string, string | undefined>;
@@ -138,6 +141,7 @@ function fileLayers(
 export function resolveConfig(input: ResolveInput): { config: Config; warnings: string[] } {
 	const warnings: string[] = [];
 	const config = structuredClone(DEFAULT_CONFIG);
+	applyLayer(config, { ...input.installed }, (key) => `${key} in install choices`, warnings);
 	const file = fileLayers(input.file, input.harness, warnings);
 	applyLayer(config, file.top, (key) => `${key} in config file`, warnings);
 	applyLayer(config, file.harness, (key) => `${key} in config file [harness.${input.harness}]`, warnings);

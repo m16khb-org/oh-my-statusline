@@ -7,6 +7,7 @@ describe("options", () => {
 		expect(readOptions()).toEqual({
 			theme: "dark",
 			glyphs: "powerline",
+			colors: 24,
 			model: true,
 			effort: true,
 			dir: true,
@@ -47,5 +48,14 @@ describe("options", () => {
 
 	test("the theme is not a cli.json option", () => {
 		expect(readOptions({ theme: "light" }).theme).toBe("dark");
+	});
+
+	test("the shared config (config.toml, STATUSLINE_*, NO_COLOR) wins over cli.json's installed glyphs", () => {
+		expect(readOptions({ glyphs: "plain" }, "dark", { glyphs: "ascii", colors: 0, subagents: false })).toMatchObject({
+			glyphs: "ascii",
+			colors: 0,
+			subagents: false,
+		});
+		expect(readOptions({ glyphs: "ascii" }).glyphs).toBe("ascii");
 	});
 });
