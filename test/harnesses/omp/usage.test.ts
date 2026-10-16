@@ -55,6 +55,12 @@ describe("usage windows", () => {
 		expect(usageWindows([anthropic], undefined, undefined)).toEqual([]);
 	});
 
+	test("a report without limits, or a limit without an amount, adds no window", () => {
+		expect(usageWindows([{ provider: "anthropic" }], OPUS, undefined)).toEqual([]);
+		const noAmount: UsageReport = { provider: "anthropic", limits: [{ scope: { windowId: "5h" } }] };
+		expect(usageWindows([noAmount], OPUS, undefined)).toEqual([]);
+	});
+
 	test("a window known only by its duration (within a minute) is classified by it", () => {
 		const report = (durationMs: number): UsageReport => ({
 			provider: "openai-codex",
