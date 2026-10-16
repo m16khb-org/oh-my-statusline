@@ -335,7 +335,10 @@ describe("refusals", () => {
 		const run = runCli(w, "install", ["codex", "--codex", path.join(w.root, "missing")]);
 		expect(run.code).toBe(1);
 		expect(run.err).toContain("Codex CLI not found");
-		w.env.PATH = "/usr/bin:/bin";
+		// No tmux anywhere on PATH (CI images ship one in /usr/bin), only the explicit Codex.
+		const empty = path.join(w.root, "empty-bin");
+		mkdirSync(empty);
+		w.env.PATH = empty;
 		const noTmux = runCli(w, "install", ["codex", "--codex", w.codex]);
 		expect(noTmux.code).toBe(1);
 		expect(noTmux.err).toContain("tmux is required");
