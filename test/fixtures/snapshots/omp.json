@@ -1,0 +1,25 @@
+{
+  "model": { "name": "GPT-5.5", "family": "gpt-5.5", "isFast": true },
+  "effort": "high",
+  "dir": { "name": "my-app", "relative": "packages/core/src/render", "worktree": "fix-ladder" },
+  "git": {
+    "branch": "",
+    "ahead": 0,
+    "behind": 3,
+    "conflicts": 1,
+    "staged": 0,
+    "modified": 0,
+    "untracked": 0,
+    "detachedOid": "ca8cb99d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b"
+  },
+  "pr": { "number": 77, "url": "https://gitlab.com/octocat/my-app/-/merge_requests/77", "state": "draft", "kind": "mr" },
+  "stats": { "costUsd": 0, "durationMs": 45000, "linesAdded": 0, "linesRemoved": 0 },
+  "cache": { "hitPct": 87, "ttlRemainingMs": null },
+  "context": { "usedPct": 31, "tokens": 84000, "windowSize": 272000 },
+  "limits": [
+    { "label": "5h", "usedPct": 72, "resetsAtMs": 1790007200000, "windowMs": 18000000, "scopedModel": null },
+    { "label": "7d", "usedPct": 44, "resetsAtMs": 1790350000000, "windowMs": 604800000, "scopedModel": null },
+    { "label": "Fable·5h", "usedPct": 12, "resetsAtMs": 1790007200000, "windowMs": 18000000, "scopedModel": "Fable" }
+  ],
+  "counts": null
+}

@@ -1,0 +1,25 @@
+{
+  "model": { "name": "Opus 5.5", "family": "claude-opus-5-5[1m]", "isFast": false },
+  "effort": "max",
+  "dir": { "name": "my-app", "relative": "", "worktree": null },
+  "git": {
+    "branch": "main",
+    "ahead": 0,
+    "behind": 0,
+    "conflicts": 0,
+    "staged": 0,
+    "modified": 0,
+    "untracked": 0,
+    "detachedOid": null
+  },
+  "pr": { "number": 512, "url": "https://github.com/octocat/my-app/pull/512", "state": "approved", "kind": "pr" },
+  "stats": { "costUsd": 4.21, "durationMs": 1380000, "linesAdded": 0, "linesRemoved": 0 },
+  "cache": { "hitPct": null, "ttlRemainingMs": 2520000 },
+  "context": { "usedPct": 28, "tokens": 283000, "windowSize": 1000000, "exceeds200k": true },
+  "limits": [
+    { "label": "5h", "usedPct": 41, "resetsAtMs": 1790004320000, "windowMs": 18000000, "scopedModel": null },
+    { "label": "7d", "usedPct": 18, "resetsAtMs": 1790280000000, "windowMs": 604800000, "scopedModel": null },
+    { "label": "Fable", "usedPct": 25, "resetsAtMs": 1790280000000, "windowMs": 604800000, "scopedModel": "Fable" }
+  ],
+  "counts": null
+}

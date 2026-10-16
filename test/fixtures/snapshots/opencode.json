@@ -1,0 +1,18 @@
+{
+  "model": { "name": "Opus 5.5", "family": "claude-opus" },
+  "effort": "max",
+  "dir": { "name": "my-app", "relative": "src/lib/statusline", "worktree": null },
+  "git": {
+    "branch": "feature/statusline",
+    "ahead": 2,
+    "behind": 0,
+    "conflicts": 0,
+    "staged": 1,
+    "modified": 3,
+    "untracked": 1,
+    "detachedOid": null
+  },
+  "stats": { "costUsd": 4.21, "durationMs": 1380000, "linesAdded": 156, "linesRemoved": 23 },
+  "context": { "usedPct": 28.3, "tokens": 283000, "windowSize": 1000000 },
+  "counts": { "subagents": 2, "shells": 1 }
+}
