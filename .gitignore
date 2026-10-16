@@ -1,0 +1,4 @@
+node_modules/
+.issueops/
+*.bak-*
+.DS_Store
