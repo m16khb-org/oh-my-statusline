@@ -27,7 +27,8 @@ invented). The reason for each `–` follows the table.
 | k8s chip (opt-in) | ✓ | ✓ | ✓ | ✓ |
 | today's cost `Σ` (opt-in) | ✓ | ✓ | ✓ | ✓ |
 
-1. Codex's rollout and config carry no fast/priority tier flag.
+1. Codex keeps the service tier only in `~/.codex/config.toml` (`service_tier`, e.g. `"fast"`), not per turn in
+   the rollout; the adapter does not read it, so the `fast` mark is never shown for Codex.
 2. OpenCode's model reference carries a variant (the effort), not a service tier.
 3. Claude Code puts the PR in the session JSON. Only when the JSON names none is gh/glab asked.
 4. Read with `gh pr view` / `glab mr view` through `PrAdapter`, cached 300 s, in the background.
@@ -61,8 +62,9 @@ and the `◈` chip on omp and OpenCode. Codex has neither.
 | omp | `◈ N` chip, N = registered agents with `kind === "sub"` and `status === "running"` | omp's process-global `AgentRegistry` (`@oh-my-pi/pi-coding-agent/registry/agent-registry`), the same filter as omp's own running-subagents badge; read on the 1 s tick |
 | OpenCode | `◈ N` chip (running sessions of the root's family except the current one) and `⌘ N` shells | the TUI's `data.session.family/status` and `data.shell.list` |
 
-Panel labels are one line: ESC sequences, control characters (C0, DEL, C1), zero-width and bidi
-marks (U+200B-200F, U+202A-202E, U+2066-2069) and runs of whitespace become one space; the label
+Panel labels are one line: ESC sequences, control characters (C0, DEL, C1), the zero-width space and
+direction marks (U+200B, U+200E, U+200F), bidi overrides and isolates (U+202A-202E, U+2066-2069) and
+runs of whitespace become one space (ZWNJ/ZWJ, U+200C/200D, stay so emoji sequences survive); the label
 is cut at 200 graphemes (never inside one) and dropped when it equals the name. A panel too
 narrow for any row prints nothing and Claude Code keeps its default rows.
 

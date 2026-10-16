@@ -7,11 +7,11 @@
 // keeps only what this one does not show (vim, plan/goal/loop mode, collab, stream, session name);
 // set OMP_STATUSLINE_NATIVE=keep to leave it untouched.
 //
-// Settings (environment variables of the omp process, or config.toml):
-//   STATUSLINE_THEME=dark|light       default: the light/dark appearance of omp's active theme
-//   STATUSLINE_GLYPHS=powerline|plain default: config.json next to the install (install --plain),
-//                                     else powerline
-//   STATUSLINE_COLORS=truecolor|256   default: truecolor when COLORTERM says so, else 256
+// Settings (environment variables of the omp process, config.toml, or the install's config.json):
+//   STATUSLINE_THEME=dark|light|auto           default: the light/dark appearance of omp's active theme
+//   STATUSLINE_GLYPHS=powerline|plain|ascii    default: config.json next to the install (install --plain),
+//                                              else powerline
+//   STATUSLINE_COLORS=truecolor|256|none|auto  default: truecolor when COLORTERM says so, else 256; NO_COLOR wins
 //   OMP_STATUSLINE_NATIVE=keep        keep omp's built-in status bar segments as configured
 //
 // Preview without omp: `bun src/harnesses/omp/main.ts --demo`.

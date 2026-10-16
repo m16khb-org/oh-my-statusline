@@ -258,6 +258,20 @@ These were checked on the reference machine after migrating its four old install
 2.1.301, Codex, omp 18.11.2, OpenCode 2.0.30), by starting each in a detached tmux session and
 reading the screen with `tmux capture-pane -p`.
 
+## Usage statistics
+
+The `stats` command needs no install step; run it from the clone (or from any installed copy's `src/cli`):
+
+```sh
+bun src/cli/stats.ts                          # every harness, every model, all time
+bun src/cli/stats.ts --harness omp --since 7d # one harness, the last 7 local days
+bun src/cli/stats.ts --since today --json     # machine-readable
+```
+
+It only reads the agents' own session files (see [docs/stats-sources.md](docs/stats-sources.md)) and keeps an
+incremental cache in `$XDG_CACHE_HOME/oh-my-statusline/stats-cache.json` (else `~/.cache/…`). The status-line
+chip `Σ $X.XX` with today's cost is off by default; turn it on with `stats.chip = true` in config.toml.
+
 ## Uninstall
 
 ```sh

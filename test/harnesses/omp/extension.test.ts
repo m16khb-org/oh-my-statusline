@@ -144,26 +144,26 @@ describe("widget", () => {
 });
 
 describe("prompt cache", () => {
-	const reply = (h: ReturnType<typeof fakeOmp>, over: object) => ({
+	const reply = (over: object) => ({
 		message: { role: "assistant", model: OPUS.id, timestamp: Date.now() - 61_000, usage: { cacheRead: 9000 }, ...over },
 	});
 
 	test("a finished response starts the prompt-cache countdown", async () => {
 		const { h, c, rows } = await started();
-		await h.emit("message_end", reply(h, {}), c);
+		await h.emit("message_end", reply({}), c);
 		expect(rows()[0]).toEndWith("· cache 58m");
 	});
 
 	test("a failed response keeps the cache countdown of the last good one", async () => {
 		const { h, c, rows } = await started();
-		await h.emit("message_end", reply(h, {}), c);
+		await h.emit("message_end", reply({}), c);
 		await h.emit("message_end", { message: { role: "assistant", model: OPUS.id, usage: { input: 0, output: 0 } } }, c);
 		expect(rows()[0]).toEndWith("· cache 58m");
 	});
 
 	test("a successful cache-warmer replay restarts the lifetime; a failed one or another model's does not", async () => {
 		const { h, c, rows } = await started();
-		await h.emit("message_end", reply(h, {}), c);
+		await h.emit("message_end", reply({}), c);
 		await h.emit("after_provider_response", { status: 500 }, c);
 		h.state.ticks[0]?.();
 		expect(rows()[0]).toEndWith("· cache 58m");
@@ -182,7 +182,7 @@ describe("prompt cache", () => {
 		const c = h.ctx({
 			sessionManager: {
 				...base.sessionManager,
-				getBranch: () => [{ type: "message", message: reply(h, {}).message }],
+				getBranch: () => [{ type: "message", message: reply({}).message }],
 			},
 		});
 		await h.emit("session_start", {}, c);

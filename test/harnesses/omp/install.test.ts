@@ -135,7 +135,7 @@ describe("installed tree", () => {
 	test("the installed runtime prints the omp demo on its own", () => {
 		const agent = fresh("demo");
 		install(opts({ agentDir: agent }));
-		const proc = Bun.spawnSync(["bun", path.join(extDir(agent), "src", "harnesses", "omp", "main.ts"), "--demo"], {
+		const proc = Bun.spawnSync([process.execPath, path.join(extDir(agent), "src", "harnesses", "omp", "main.ts"), "--demo"], {
 			stdout: "pipe",
 			env: { ...process.env, XDG_CONFIG_HOME: path.join(tmp, "config"), NO_COLOR: "1", COLUMNS: "160" },
 		});

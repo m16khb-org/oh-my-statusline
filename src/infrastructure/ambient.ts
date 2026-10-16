@@ -6,12 +6,10 @@
 import type { Config } from "../application/config.ts";
 import { Poller } from "../application/poller.ts";
 import type { ClockPort, PrPort } from "../application/ports.ts";
+import { TODAY_COST_TTL_MS } from "../application/stats/aggregate.ts";
 import type { EnvChips, PrState } from "../domain/model/snapshot.ts";
 import { buildEnvChips, type EnvAdapter, K8S_TTL_MS, TMUX_TTL_MS, type TmuxTarget, tmuxTarget } from "./env-chips.ts";
-
-const PR_TTL_MS = 300_000;
-/** Today's cost changes slowly and a refresh reads session files: at most every two minutes. */
-export const TODAY_COST_TTL_MS = 120_000;
+import { PR_TTL_MS } from "./pr.ts";
 
 export interface AmbientOptions {
 	clock: ClockPort;

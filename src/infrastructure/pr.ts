@@ -2,6 +2,9 @@ import type { PrPort } from "../application/ports.ts";
 import type { PrState } from "../domain/model/snapshot.ts";
 import { type CommandRunner, run } from "./process.ts";
 
+/** A pull request changes on a push or a review: refetch at most every five minutes. */
+export const PR_TTL_MS = 300_000;
+
 function parseJson(raw: string): Record<string, unknown> | null {
 	try {
 		const v: unknown = JSON.parse(raw);

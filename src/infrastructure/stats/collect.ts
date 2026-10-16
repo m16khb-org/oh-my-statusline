@@ -6,7 +6,7 @@
 // WAL) changes. Nothing here ever writes to a session file or database.
 
 import { Database } from "bun:sqlite";
-import { closeSync, fstatSync, openSync, readdirSync, readSync, statSync } from "node:fs";
+import { closeSync, openSync, readdirSync, readSync, statSync } from "node:fs";
 import * as path from "node:path";
 import { addEvent } from "../../application/stats/aggregate.ts";
 import type { Bucket, BucketMap, LineParser, StatsAggregate, StatsHarness, UsageEvent } from "../../application/stats/model.ts";

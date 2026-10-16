@@ -1,4 +1,6 @@
-// The one place that spawns child processes: every adapter reads command output through `run`.
+// Command output for the adapters: `run` spawns, waits, and returns stdout or null. (Processes that must
+// outlive the caller or own a terminal — Claude's detached refresh helpers, the Codex launcher and tmux —
+// spawn directly where they are started.)
 
 export interface RunOptions {
 	cwd?: string;

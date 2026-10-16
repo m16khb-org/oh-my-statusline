@@ -10,7 +10,7 @@ import { colorDepth, type Config, resolveConfig } from "../../application/config
 import type { AppearancePort, CachePort, ClockPort, GitPort, GitReading, PrPort, UsagePort } from "../../application/ports.ts";
 import { cacheFreshness, refreshEntry } from "../../application/refresh.ts";
 import { renderStatusline } from "../../application/render-statusline.ts";
-import { dayKey } from "../../application/stats/aggregate.ts";
+import { dayKey, TODAY_COST_TTL_MS } from "../../application/stats/aggregate.ts";
 import type { EnvChips, LimitWindow, PrState } from "../../domain/model/snapshot.ts";
 import type { ThemeName } from "../../domain/render/cells.ts";
 import { AppearanceAdapter } from "../../infrastructure/appearance.ts";
@@ -18,7 +18,7 @@ import { defaultCacheDir, FileCache } from "../../infrastructure/cache.ts";
 import { defaultConfigPath, readConfigFile } from "../../infrastructure/config-file.ts";
 import { buildEnvChips, EnvAdapter, K8S_TTL_MS, TMUX_TTL_MS, tmuxTarget } from "../../infrastructure/env-chips.ts";
 import { findGitRoot, GitAdapter } from "../../infrastructure/git.ts";
-import { PrAdapter } from "../../infrastructure/pr.ts";
+import { PR_TTL_MS, PrAdapter } from "../../infrastructure/pr.ts";
 import { ClaudeUsageAdapter } from "../../infrastructure/usage.ts";
 import { asObject, type Json, sessionCwd, toClaudeSnapshot, wholeNumber } from "./snapshot.ts";
 import { subagentRows } from "./subagents.ts";
@@ -26,8 +26,6 @@ import { subagentRows } from "./subagents.ts";
 const GIT_TTL_MS = 5_000;
 const USAGE_TTL_MS = 120_000;
 const USAGE_KEY = "claude-usage";
-const PR_TTL_MS = 300_000;
-const TODAY_COST_TTL_MS = 120_000;
 const DEFAULT_COLUMNS = 120;
 /** Claude Code's rows end this far before the terminal's right edge. */
 const RIGHT_MARGIN = 4;

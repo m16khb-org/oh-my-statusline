@@ -43,11 +43,20 @@ async function rows(runner?: CommandRunner) {
 	const h = fakeOmp(dir);
 	await ompStatusline(h.pi, h.host, runner);
 	await h.emit("session_start", {}, h.ctx());
-	const read = async () => {
-		// The pollers land in the background; the one-second tick redraws.
-		for (let i = 0; i < 100; i++) await Bun.sleep(5);
-		for (const tick of h.state.ticks) tick();
-		return draw(h.widgets[0]?.content, 200)[0] ?? "";
+	/**
+	 * The pollers land in the background and the one-second tick redraws. With `until`, ticks until
+	 * the row shows it; without, it waits a fixed half second so an absence check sees every poller
+	 * settle (there is no event that says "nothing more will come", so this one wait stays real time).
+	 */
+	const read = async (until?: (row: string) => boolean) => {
+		let row = "";
+		for (let i = 0; i < 400; i++) {
+			await Bun.sleep(5);
+			for (const tick of h.state.ticks) tick();
+			row = draw(h.widgets[0]?.content, 200)[0] ?? "";
+			if (until ? until(row) : i >= 99) break;
+		}
+		return row;
 	};
 	return { read };
 }
@@ -56,7 +65,7 @@ describe("omp chips", () => {
 	test("ssh and venv come from the omp process environment", async () => {
 		process.env.SSH_CONNECTION = "1.2.3.4 5 6.7.8.9 22";
 		process.env.VIRTUAL_ENV = "/home/me/app/.venv";
-		const row = await (await rows()).read();
+		const row = await (await rows()).read((r) => r.includes("venv .venv"));
 		expect(row).toMatch(/ssh \S+/);
 		expect(row).toContain("venv .venv");
 	});
@@ -65,7 +74,7 @@ describe("omp chips", () => {
 		process.env.SSH_CONNECTION = "1.2.3.4 5 6.7.8.9 22";
 		process.env.VIRTUAL_ENV = "/home/me/app/.venv";
 		config("[chips]\nssh = false\n");
-		const row = await (await rows()).read();
+		const row = await (await rows()).read((r) => r.includes("venv .venv"));
 		expect(row).not.toContain("ssh");
 		expect(row).toContain("venv .venv");
 	});
@@ -85,7 +94,7 @@ describe("omp chips", () => {
 			calls.push(cmd);
 			return cmd.at(-1)?.endsWith("today-cost.ts") ? "12.5\n" : null;
 		};
-		const row = await (await rows(runner)).read();
+		const row = await (await rows(runner)).read((r) => r.includes("Σ $12.50"));
 		expect(row).toContain("Σ $12.50");
 		const call = calls.find((c) => c.at(-1)?.endsWith("src/cli/today-cost.ts"));
 		expect(call).toBeDefined();

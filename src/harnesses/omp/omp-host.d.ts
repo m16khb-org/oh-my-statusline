@@ -1,4 +1,4 @@
-// The two omp host modules main.ts imports at runtime, declared to the extent it uses them.
+// The omp host modules main.ts imports at runtime, declared to the extent it uses them.
 // omp resolves these specifiers for extensions; they are not dependencies of this repository.
 
 declare module "@oh-my-pi/pi-coding-agent/config/registry" {

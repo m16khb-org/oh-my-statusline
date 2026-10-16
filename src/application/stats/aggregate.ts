@@ -15,6 +15,9 @@ import type {
 } from "./model.ts";
 import { STATS_HARNESSES } from "./model.ts";
 
+/** Today's cost changes slowly and a refresh reads session files: at most every two minutes. */
+export const TODAY_COST_TTL_MS = 120_000;
+
 const DAY_MS = 86_400_000;
 const formatters = new Map<string, Intl.DateTimeFormat>();
 

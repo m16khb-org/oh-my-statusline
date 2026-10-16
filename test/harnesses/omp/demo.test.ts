@@ -5,7 +5,7 @@ import { demoRows } from "../../../src/harnesses/omp/main.ts";
 const MAIN = path.join(import.meta.dir, "..", "..", "..", "src", "harnesses", "omp", "main.ts");
 
 test("--demo prints the omp demo case as two rows, without omp", () => {
-	const proc = Bun.spawnSync(["bun", MAIN, "--demo"], { stdout: "pipe", env: { ...process.env, NO_COLOR: "1", COLUMNS: "160", STATUSLINE_GLYPHS: "plain" } });
+	const proc = Bun.spawnSync([process.execPath, MAIN, "--demo"], { stdout: "pipe", env: { ...process.env, XDG_CONFIG_HOME: "/nonexistent", NO_COLOR: "1", COLUMNS: "160", STATUSLINE_GLYPHS: "plain" } });
 	expect(proc.exitCode).toBe(0);
 	const rows = proc.stdout.toString().trimEnd().split("\n");
 	expect(rows).toHaveLength(2);

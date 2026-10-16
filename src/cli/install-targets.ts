@@ -126,15 +126,15 @@ Migration from the four standalone projects (claude-code-statusline, codex-statu
 omp-statusline, opencode-statusline) happens on install, per harness, and is printed step by step:
   claude    The settings the old install saved become the settings ${script} restores on uninstall (not
             the old command). settings.json is backed up (settings.json.bak-<timestamp>) and switched
-            to oh-my-statusline, then <config>/claude-code-statusline is removed.
+            to oh-my-statusline, then <config>/claude-code-statusline is removed if it holds only the old files.
   codex     The old launchers that are unmodified are removed (modified ones are kept and reported);
             its Codex path, glyph mode and \`codex\` wrapper choice carry over; then
-            <data>/codex-statusline is removed.
+            <data>/codex-statusline is removed if it holds only the old files.
   omp       <agent dir>/extensions/omp-statusline is removed (omp would load two widgets); its glyph
             mode carries over. A directory that only looks similar is left alone.
   opencode  The ./statusline entry in cli.json is replaced by ./oh-my-statusline with its options
             (such as glyphs) kept; the plugins list the old install saved becomes the one restored on
-            uninstall; cli.json is backed up and <config>/statusline is removed.
+            uninstall; cli.json is backed up and <config>/statusline is removed if it holds only the old files.
 The old glyph mode is kept unless --plain asks for plain glyphs. A settings or cli.json file that is
 not valid JSON stops that harness with every file untouched; the other harnesses continue, and the
 exit status is 1 if any of them failed. Use --dry-run first to see the plan.

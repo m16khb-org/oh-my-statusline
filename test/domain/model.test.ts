@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { toDirInfo } from "../../src/domain/model/dir.ts";
 import { type HarnessId, toSnapshot } from "../../src/domain/model/snapshot.ts";
-import { rgb, rgbFromHex, rgbToHex, toPercentage, toTokenAmount } from "../../src/domain/model/values.ts";
+import { rgbToHex, toPercentage, toTokenAmount } from "../../src/domain/model/values.ts";
 
 async function fixture(harness: HarnessId): Promise<unknown> {
 	return Bun.file(new URL(`../fixtures/snapshots/${harness}.json`, import.meta.url)).json();
@@ -38,19 +38,9 @@ describe("TokenAmount", () => {
 });
 
 describe("Rgb", () => {
-	test("channels clamp to 0..255 whole values", () => {
-		expect(rgb(-1, 300, 12.7)).toEqual([0, 255, 12]);
-	});
-
-	test("hex round-trips, with or without the leading #", () => {
-		expect(rgbFromHex("#bb9af7")).toEqual([187, 154, 247]);
-		expect(rgbFromHex("7aa2f7")).toEqual([122, 162, 247]);
+	test("hex is two lowercase digits per channel", () => {
 		expect(rgbToHex([26, 27, 38])).toBe("#1a1b26");
-	});
-
-	test("malformed hex is rejected rather than read as black", () => {
-		expect(rgbFromHex("#12")).toBeNull();
-		expect(rgbFromHex("#zzzzzz")).toBeNull();
+		expect(rgbToHex([255, 0, 9])).toBe("#ff0009");
 	});
 });
 

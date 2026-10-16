@@ -31,18 +31,6 @@ export function toTokenAmount(raw: unknown): TokenAmount {
 	return value === undefined || value < 0 ? 0 : Math.floor(value);
 }
 
-export function rgb(r: number, g: number, b: number): Rgb {
-	const channel = (v: number) => Math.min(255, Math.max(0, Math.trunc(v)));
-	return [channel(r), channel(g), channel(b)];
-}
-
-/** "#rrggbb" or "rrggbb" → Rgb; null for anything else. */
-export function rgbFromHex(hex: string): Rgb | null {
-	const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
-	if (!m) return null;
-	return [Number.parseInt(m[1]!, 16), Number.parseInt(m[2]!, 16), Number.parseInt(m[3]!, 16)];
-}
-
 export function rgbToHex(color: Rgb): string {
 	return `#${color.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }

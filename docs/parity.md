@@ -1,7 +1,8 @@
 # Parity with the original renderers
 
 oh-my-statusline replaces four separate status lines. This page maps every scenario their test
-suites covered to the test that now covers it, and lists each intentional behavior change.
+suites covered to the test that now covers it, and lists each intentional behavior change. The four
+original repositories were deleted on 2026-10-17; the file and test names below refer to them as they were.
 
 ## Byte-level parity checks
 
@@ -69,8 +70,8 @@ time-independent sessions (`test/fixtures/claude/golden.json`).
 | stale git cache renders immediately and refreshes in the background | cache › git through the cache; e2e › detached helper completes after the parent exits |
 | plain glyphs ×2, 256 colors, colors setting, light theme, unset theme | statusline › glyphs, colors and theme |
 | rows fit narrow terminals | statusline › width |
-| all 18 `subagent_*` tests, prints nothing without tasks | subagents (one test each) |
-| all 16 install tests | install.test.ts (same order) |
+| all 17 `subagent_*` tests, prints nothing without tasks | subagents (one test each; a few originals share a test) |
+| 15 of the 16 install tests | install.test.ts (same order); `test_unknown_option_is_rejected` → test/cli/install.test.ts (unknown option, exit 2) |
 | `missing_jq`, demo ×2, timing budgets ×2 | not ported: no jq; the demo is `bun run demo`; timing moves to the perf suite, and `cache` proves a stale entry never runs git on the render path |
 
 Claude-specific changes: a non-object stdin prints the hint line (it rendered a `$PWD` chip);
@@ -153,7 +154,7 @@ because `@opencode/util` also ships a Node runtime variant.
 |---|---|
 | copies the plugin and registers it; `--plain`; keeps other plugins, adds nothing twice; leaves a foreign dir alone; refuses non-array plugins | install.test › install |
 | uninstall restores the previous list; drops the plugins key when there was none; keeps a status line entry that was there; a plugin added meanwhile survives; nothing installed / foreign dir | install.test › uninstall |
-| rejects an unknown option | not ported here: argument parsing belongs to the unified CLI |
+| rejects an unknown option | test/cli/install.test.ts (the unified CLI parses arguments: unknown option → exit 2) |
 | git ×3 | git-watcher.test (shared parsers) |
 | context usage ×3, directory label ×4, counts chip, demo, chips off, session without cost, model chip | snapshot.test, view.test |
 | text metrics | runtime.test |

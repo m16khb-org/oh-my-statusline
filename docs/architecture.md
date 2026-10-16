@@ -68,14 +68,15 @@ reports absent data as `null` instead of throwing, so a failing command only omi
 | `GitPort` | branch, ahead/behind, counts, checkout roots, working-tree lines vs HEAD | `GitAdapter` (`git.ts`) |
 | `PrPort` | the open PR / MR of the branch | `PrAdapter` (`pr.ts`): `gh pr view`, or `glab mr view` for a remote URL containing `gitlab` |
 | `UsagePort` | usage-limit windows from the provider | `ClaudeUsageAdapter` (`usage.ts`): the OAuth usage endpoint, token from `.credentials.json` or the macOS keychain |
-| `AppearancePort` | the desktop's light/dark mode | `AppearanceAdapter` (`appearance.ts`): `defaults read -g AppleInterfaceStyle`, 30 s cache, `dark` when unreadable |
+| `AppearancePort` | the desktop's light/dark mode | `AppearanceAdapter` (`appearance.ts`): `defaults read -g AppleInterfaceStyle`, 30 s cache; `dark` where there is no `defaults` (not macOS), `light` when the key is missing (how macOS reports light mode) |
 | `CachePort` | a key/value cache shared by short-lived processes, with a refresh lock | `FileCache` (`cache.ts`) |
 
 Adapters that are not ports (nothing in the application layer calls them):
 
-- `run` (`process.ts`) is the one place that spawns children. Adapters take a `CommandRunner` so tests can inject
-  failures and timeouts; OpenCode passes its own `nodeRunner` built on `node:child_process`, because its plugin may
-  run under Node.
+- `run` (`process.ts`) runs the commands whose output an adapter reads. Adapters take a `CommandRunner` so tests can
+  inject failures and timeouts; OpenCode passes its own `nodeRunner` built on `node:child_process`, because its
+  plugin may run under Node. Processes that outlive the caller (Claude's detached refresh helpers) or own a terminal
+  (the Codex launcher, tmux) are spawned where they start.
 - `EnvAdapter` (`env-chips.ts`): hostname, `tmux display-message`, `kubectl config current-context`.
 - `Ambient` (`ambient.ts`): the background reads for long-lived processes, one `Poller` per source.
 - `readConfigFile` / `defaultConfigPath` (`config-file.ts`): the TOML file. The application only merges what it is handed.
@@ -99,6 +100,10 @@ render that depends on nothing, and adapters at the edge. It does not carry the 
   modules and never wait on a slow command (see [performance.md](performance.md)).
 - **Abstractions only where a second implementation exists** (the four harnesses, real versus fake I/O). Anything
   else is a plain function.
+- **Development dependencies only for types.** `package.json` has no `dependencies`. Its `devDependencies` are
+  `@types/bun` and `typescript`, plus `@opencode/plugin`, `@opentui/solid` and `solid-js`: the OpenCode plugin is
+  TSX, and `tsc` needs the plugin API and the `@opentui/solid` JSX types to check it (`solid-js` is pinned to the
+  exact version `@opentui/solid` peers on). At runtime OpenCode provides all three.
 
 ## Data flow per harness
 

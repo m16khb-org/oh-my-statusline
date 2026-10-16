@@ -11,7 +11,8 @@ for what your font and locale can draw, and the colors for what your terminal ca
 | `STATUSLINE_THEME` / `theme` | `auto`, `dark`, `light` | `auto` |
 
 Precedence, lowest to highest: defaults, the choices `./install.sh` recorded (for example `--plain`), the config
-file, the environment, then flags. `NO_COLOR` is the exception: it is never overridden (see below).
+file, the environment, then flags (reserved; no harness entry point takes any today). `NO_COLOR` is the exception:
+it is never overridden (see below).
 
 Every harness follows these rules, with two notes (the install-time `--plain` choice is in
 [INSTALL.md](../INSTALL.md#fonts-and-display-modes)):

@@ -18,7 +18,7 @@ function median(samples: number[]): number {
 }
 
 describe("render hot paths", () => {
-	test("rendering a full snapshot takes well under a millisecond (budget: 10 ms)", async () => {
+	test("rendering a full snapshot stays under 10 ms (median; it takes ~0.01 ms)", async () => {
 		const config = resolveConfig({ harness: "omp", file: null, env: {}, flags: {} }).config;
 		const samples: number[] = [];
 		for (const harness of ["claude", "codex", "omp", "opencode"] as const) {
