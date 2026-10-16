@@ -243,6 +243,21 @@ other harnesses continue.
 The old glyph mode is kept unless `--plain` asks for plain glyphs. The old repositories (the clones you
 installed from) are not touched; delete them yourself when you are done.
 
+### Checking the result
+
+After `./install.sh`, start each agent once; the status rows draw before you send anything:
+
+| Harness | Start | What you should see |
+|---|---|---|
+| Claude Code | `claude` in a trusted folder | Two rows under the prompt. The ctx gauge appears after the first turn; per-model weekly windows (e.g. Fable) show from the start when you are logged in. |
+| Codex | `codex-statusline` (or `codex` with `--wrap-codex`) | Two rows at the bottom of the private tmux session; `ctx —` / `7d —` until the first turn. A "Hooks need review" prompt from Codex itself may come first. |
+| omp | `omp` | Two rows below the editor, exactly one set (two sets mean the old `omp-statusline` extension is still there). |
+| OpenCode | `opencode` (home: one row), `opencode --continue` (a session: two rows) | The plugin's rows only; the built-in usage footer is off. |
+
+These were checked on the reference machine after migrating its four old installs (Claude Code
+2.1.301, Codex, omp 18.11.2, OpenCode 2.0.30), by starting each in a detached tmux session and
+reading the screen with `tmux capture-pane -p`.
+
 ## Uninstall
 
 ```sh
