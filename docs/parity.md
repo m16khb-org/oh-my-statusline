@@ -111,6 +111,34 @@ with a `/tmp` fallback when the socket path would be too long; thread prefixes m
 `substr(id, 1, n)` instead of `LIKE`; uninstall removes the installed tree (launchers changed by
 the user are still kept).
 
+## omp (`test/harnesses/omp/`)
+
+omp 18.x loads `extensions/<name>/index.ts` (one level deep; `discovery/helpers.ts`
+`discoverExtensionModulePaths`) and uses its default export as the factory. The installer writes a
+root `index.ts` that re-exports `src/harnesses/omp/main.ts`; the copied `src/**` files are not
+entry candidates. `install.test.ts` imports that shim from a temp install and gets two rows.
+
+| Original (`statusline.test.ts`, `install.test.ts`, `render.test.ts`) | Covered by |
+|---|---|
+| model labels drop the Claude prefix | usage.test › model labels |
+| usage gauges 5h/7d/tier order, other providers ignored, duration-only windows, own account wins | usage.test › usage windows |
+| prompt cache 1h / 5m / TTL wins / expired / hit rate | usage.test › prompt cache |
+| subagent and non-interactive sessions get no widget | extension › subagents and non-interactive … |
+| two rows below the prompt | extension › the main interactive session … |
+| cache countdown; a failed response keeps it | extension › prompt cache |
+| fast refusal and `/fast` coming back | extension › fast mode and effort |
+| context read only on change | extension › context |
+| native status bar trimmed once per settings scope; `OMP_STATUSLINE_NATIVE=keep` | extension › omp's own status bar |
+| install default dir, `PI_CODING_AGENT_DIR`, `--plain`; foreign dir refused; uninstall | install.test |
+| `render.ts --demo` | demo.test; install.test › the installed runtime prints the omp demo |
+| Poller tests ×2 | test/application/poller.test.ts; extension-level usage throttle |
+| readGit / findGitRoot ×4 | test/infrastructure/git.test.ts; extension shows branch and changes from a real repo |
+| render.test.ts | test/domain/render.test.ts (byte parity, see above) |
+
+omp-specific changes: the widget key and install directory are `oh-my-statusline`; usage windows
+carry `usedPct` in percent and a `null` reset when unknown; git status is parsed once per refresh
+(it was parsed twice); glyphs come from `config.json` (lowest), then config.toml, then env.
+
 ## Intentional behavior changes
 
 | Change | Before | Now | Why |
