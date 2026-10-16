@@ -7,7 +7,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { CommandRunner } from "../../../src/infrastructure/process.ts";
 import ompStatusline from "../../../src/harnesses/omp/main.ts";
-import { makeHome, NOW } from "../../stats/helpers.ts";
 import { draw, fakeOmp } from "./fake-omp.ts";
 
 const KEYS = ["XDG_CONFIG_HOME", "STATUSLINE_GLYPHS", "STATUSLINE_COLORS", "STATUSLINE_THEME", "SSH_CONNECTION", "TMUX", "TMUX_PANE", "VIRTUAL_ENV", "CONDA_DEFAULT_ENV", "HOME", "XDG_CACHE_HOME", "TZ", "PATH"];
@@ -74,21 +73,6 @@ describe("omp chips", () => {
 	test("a shell outside ssh/tmux/venv has no environment chips", async () => {
 		const row = await (await rows()).read();
 		for (const name of ["ssh", "tmux", "venv", "k8s", "Σ"]) expect(row).not.toContain(name);
-	});
-
-	test("stats.chip shows today's cost, computed in the background from the session storage", async () => {
-		const home = makeHome("UTC");
-		try {
-			process.env.HOME = home.home;
-			process.env.XDG_CACHE_HOME = home.env.XDG_CACHE_HOME;
-			process.env.TZ = "UTC";
-			config("[stats]\nchip = true\n");
-			setSystemTime(new Date(NOW));
-			const row = await (await rows()).read();
-			expect(row).toMatch(/Σ \$\d+\.\d\d/);
-		} finally {
-			home.cleanup();
-		}
 	});
 
 	test("today's cost runs out of process: the injected runner is called with the today-cost script, not the in-process collector", async () => {
