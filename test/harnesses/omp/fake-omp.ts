@@ -26,6 +26,8 @@ export function fakeOmp(cwd: string, settings: object = {}) {
 		context: { tokens: 283_000, contextWindow: 1_000_000, percent: 28.3 as number | null },
 		ticks: [] as (() => void)[],
 		isLight: false,
+		/** Agents of omp's process-global registry, as `runningSubagents` filters them. */
+		registry: [] as { kind: string; status: string }[],
 	};
 	const pi: OmpApi = {
 		on: <E>(event: string, handler: (event: E, ctx: OmpContext) => unknown) => {
@@ -43,6 +45,7 @@ export function fakeOmp(cwd: string, settings: object = {}) {
 	const host: HostModules = {
 		lookupSetting: (id) => ({ override: (_scope, value) => void overrides.push([id, value]) }),
 		serviceTierFamily: (model) => (model.api === "anthropic-messages" ? "anthropic" : undefined),
+		runningSubagents: () => state.registry.filter((ref) => ref.kind === "sub" && ref.status === "running").length,
 	};
 	const widgets: { key: string; content: unknown; placement?: string }[] = [];
 	const ctx = (over: Partial<OmpContext> = {}): OmpContext => ({

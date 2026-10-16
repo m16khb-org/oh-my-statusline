@@ -107,4 +107,6 @@ export interface OmpApi {
 export interface HostModules {
 	lookupSetting?(id: string): SettingHandle | undefined;
 	serviceTierFamily?(model: OmpModel): string | undefined;
+	/** Agents of omp's process-global registry that are subagents and running: the ids its own badge counts. */
+	runningSubagents?(): number;
 }

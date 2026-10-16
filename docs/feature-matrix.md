@@ -18,8 +18,9 @@ invented). The reason for each `–` follows the table.
 | ctx (context window) | ✓ | ✓ | ✓ | ✓ |
 | 5h / 7d limits | ✓ | ✓ | ✓ | – ¹⁰ |
 | tier-scoped limits | ✓ | – ¹¹ | ✓ | – ¹⁰ |
-| running counts (`◈` `⌘`) | – ¹² | – ¹² | – ¹² | ✓ |
-| agent panel | ✓ | – ¹³ | – ¹³ | – ¹³ |
+| subagent chip (`◈`) | – ¹² | – ¹² | ✓ ¹⁵ | ✓ ¹⁶ |
+| shell chip (`⌘`) | – ¹² | – ¹² | – ¹² | ✓ ¹⁶ |
+| subagent panel (`--subagents`) | ✓ ¹⁷ | – ¹³ | – ¹³ | – ¹³ |
 | ssh chip | ✓ | ✓ | ✓ | ✓ |
 | tmux chip | ✓ | ✓ ¹⁴ | ✓ | ✓ |
 | venv chip | ✓ | ✓ | ✓ | ✓ |
@@ -39,12 +40,45 @@ invented). The reason for each `–` follows the table.
 9. Claude Code's session JSON has the cache expiry (`prompt_cache`) but no hit rate.
 10. OpenCode has no plan-usage source (it serves many providers), so it has no 5h/7d or tier windows.
 11. Codex reports only its 5h and 7d windows.
-12. Counts of running subagents/shells need the host's live session store: only OpenCode's TUI
-    API exposes it. Claude Code has the agent panel instead; Codex and omp expose no counts.
-13. The agent panel is Claude Code's `subagentStatusLine`; no other host has such a slot.
+12. Claude Code's statusLine JSON has no counts, and it shows its running agents in the panel
+    instead. Codex's rollout, config and hooks carry no subagent or shell data. omp's extension
+    surface reads no shell data; only the subagent registry is used (see 15).
+13. The panel is Claude Code's `subagentStatusLine`; no other host has such a slot. omp and
+    OpenCode draw one status line of their own, so their subagents are a count (◈) only.
 14. Codex runs in a private tmux server. The chip shows the user's OUTER tmux (`$TMUX` and
     `$TMUX_PANE` recorded by the launcher at launch, and the `session:window` they resolved to
     then), never the private one. Launched outside tmux, there is no chip.
+
+## Subagents
+
+`subagents = false` (top level or `[harness.<id>]` in `config.toml`) turns off the Claude panel
+and the `◈` chip on omp and OpenCode. Codex has neither.
+
+| Harness | View | Source |
+|---|---|---|
+| Claude Code | panel: one row per task with a model (model, effort, name · label, ctx gauge, tokens, running time or ✓/✘) | `subagentStatusLine` stdin `{columns, tasks[]}` |
+| Codex | none | no subagent data in the rollout, config or hooks |
+| omp | `◈ N` chip, N = registered agents with `kind === "sub"` and `status === "running"` | omp's process-global `AgentRegistry` (`@oh-my-pi/pi-coding-agent/registry/agent-registry`), the same filter as omp's own running-subagents badge; read on the 1 s tick |
+| OpenCode | `◈ N` chip (running sessions of the root's family except the current one) and `⌘ N` shells | the TUI's `data.session.family/status` and `data.shell.list` |
+
+Panel labels are one line: ESC sequences, control characters (C0, DEL, C1), zero-width and bidi
+marks (U+200B-200F, U+202A-202E, U+2066-2069) and runs of whitespace become one space; the label
+is cut at 200 graphemes (never inside one) and dropped when it equals the name. A panel too
+narrow for any row prints nothing and Claude Code keeps its default rows.
+
+15. Verified against omp 18.11.2. `AgentRegistry.global()` lists the main session and every
+    subagent (`kind` `main`/`sub`/`advisor`, `status` `running`/`idle`/`parked`/`aborted`;
+    `src/registry/agent-registry.ts`), and omp's badge counts `kind === "sub" && status ===
+    "running"` (`pi-tui/src/overlays/running-subagent-badge.ts`). The registry is not part of
+    the extension API, so it is imported at load time and the chip is absent when that import
+    fails. A collab guest's registry (a remote host's agents) is not read.
+16. OpenCode's count takes in the siblings and parent of a child session; `subagents = false`
+    hides `◈` only, shells stay (`⌘` is a separate chip, switched by the plugin's `counts`
+    option together with `◈`).
+17. Claude Code passes only subagents to `subagentStatusLine`, not agent-team teammates
+    ([anthropics/claude-code#87716](https://github.com/anthropics/claude-code/issues/87716)):
+    teammate rows keep the default format, and teammates have no data anywhere else. A worker
+    spawned without a name shows up in the panel.
 
 ## Environment chips
 

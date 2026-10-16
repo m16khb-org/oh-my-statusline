@@ -107,7 +107,7 @@ export function toStatusSnapshot(input: StatusInput, options: Options, nowMs: nu
 				? { usedPct: (context.tokens / context.limit) * 100, tokens: context.tokens, windowSize: context.limit }
 				: null,
 		limits: [],
-		counts: options.counts && input.counts ? input.counts : null,
+		counts: options.counts && input.counts ? { subagents: options.subagents ? input.counts.subagents : 0, shells: input.counts.shells } : null,
 		env: input.env,
 		todayCostUsd: input.todayCostUsd,
 	});

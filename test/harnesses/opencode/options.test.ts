@@ -13,6 +13,7 @@ describe("options", () => {
 			git: true,
 			lines: true,
 			counts: true,
+			subagents: true,
 			cost: true,
 			elapsed: true,
 			context: true,

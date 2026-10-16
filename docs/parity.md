@@ -194,3 +194,6 @@ New behavior, not present in any original; covered in `test/domain/env-chips.tes
 | omp PR | always read | read only when `pr.enabled` | One switch for all harnesses. |
 | Today's cost `Σ` | none | `stats.chip`, background, ≥ 120 s | The stats feature on the status line. |
 | Codex tmux | n/a | the user's outer tmux, recorded at launch | Codex runs in a private tmux server. |
+| Subagent labels | control characters → space, 200 characters | ESC sequences, C0/DEL/C1, zero-width and bidi marks and whitespace runs → one space; 200 graphemes | Escape sequences no longer leave bracket text; no emoji is cut in half. |
+| omp ◈ chip | counts null | running subagents of omp's agent registry; `subagents = false` hides it | The registry has the data. |
+| OpenCode `subagents = false` | not honoured | hides `◈`, shells stay | One switch for the subagent views. |

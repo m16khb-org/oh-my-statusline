@@ -8,3 +8,7 @@ declare module "@oh-my-pi/pi-coding-agent/config/registry" {
 declare module "@oh-my-pi/pi-ai" {
 	export function serviceTierFamily(model: { id: string; provider: string; api?: string }): string | undefined;
 }
+
+declare module "@oh-my-pi/pi-coding-agent/registry/agent-registry" {
+	export const AgentRegistry: { global(): { list(): { kind: string; status: string }[] } };
+}

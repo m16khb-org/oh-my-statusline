@@ -591,7 +591,7 @@ describe("agent panel (claude --subagents)", () => {
 
 	test("labels are sanitized into one line, and a label equal to the name is not repeated", () => {
 		const r = panel([agent({ label: 'say "hi"\n\tthen\x1b[31m \\ leave' })]);
-		expect(strip(r.a1!)).toContain('say "hi" then [31m \\ leave');
+		expect(strip(r.a1!)).toContain('say "hi" then \\ leave');
 		expect(r.a1).not.toContain("\n");
 		const same = strip(panel([agent({ label: "Review the diff", name: "Review the diff" })]).a1!);
 		expect(same.split("Review the diff")).toHaveLength(2);

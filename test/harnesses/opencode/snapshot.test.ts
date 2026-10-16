@@ -121,6 +121,14 @@ describe("snapshot", () => {
 		expect(lines(input({ counts: { subagents: 2, shells: 1 } }))[0]).toContain("◈ 2 ⌘ 1");
 		expect(lines(input({ counts: { subagents: 0, shells: 1 } }))[0]).toContain("⌘ 1");
 		expect(lines(input({ counts: { subagents: 0, shells: 0 } }))[0]).not.toMatch(/[◈⌘]/);
+	});
+
+	test("subagents = false in the shared config hides the ◈ count; shells stay", () => {
+		const off = readOptions({}, "dark", false);
+		expect(lines(input({ counts: { subagents: 2, shells: 1 } }), off)[0]).not.toContain("◈");
+		expect(lines(input({ counts: { subagents: 2, shells: 1 } }), off)[0]).toContain("⌘ 1");
+		expect(lines(input({ counts: { subagents: 2, shells: 0 } }), off)[0]).not.toMatch(/[◈⌘]/);
+		expect(toStatusSnapshot(input({ counts: { subagents: 2, shells: 0 } }), off, NOW).counts).toEqual({ subagents: 0, shells: 0 });
 		expect(lines(input())[0]).not.toMatch(/[◈⌘]/);
 	});
 });

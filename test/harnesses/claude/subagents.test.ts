@@ -158,9 +158,94 @@ describe("--subagents protocol", () => {
 	});
 
 	test("the label is sanitized into one line", async () => {
-		const rows = await panel([task({ label: 'say "hi"\n\tthen\x1b[31m \\ leave' })]);
-		expect(strip(rows.a1!)).toContain('say "hi" then [31m \\ leave');
-		expect(rows.a1).not.toContain("\n");
+		const label = async (raw: string, over: Record<string, unknown> = {}) => strip((await panel([task({ label: raw, ...over })])).a1!);
+		expect(await label('say "hi"\n\tthen \\ leave')).toContain('say "hi" then \\ leave');
+		expect(await label("a\nb\tc\r\nd")).toContain("· a b c d");
+		// An ESC sequence (CSI colour, OSC title) is removed whole, not left as visible bracket text.
+		expect(await label("x\x1b[31mred\x1b[0m y")).toContain("· x red y");
+		expect(await label("t\x1b]0;title\x07ail")).toContain("· t ail");
+		// C0, DEL, C1, zero-width space, direction marks and bidi characters, and whitespace runs, become one space.
+		expect(await label("a\x00\x07\x7f\x85\x9fb")).toContain("· a b");
+		expect(await label("a\u200b\u200e\u200fb")).toContain("· a b");
+		// ZWJ stays, so an emoji family remains one grapheme.
+		expect(await label("team 👨‍👩‍👧")).toContain("· team 👨‍👩‍👧");
+		expect(await label("a\u202a\u202e\u2066\u2069b")).toContain("· a b");
+		expect(await label("a   \u00a0 \n  b")).toContain("· a b");
+		const rows = await panel([task({ label: "a\r\nb\x1b[2Jc" })]);
+		expect(rows.a1).not.toMatch(/[\r\n]/);
+		expect(rows.a1).not.toContain("\x1b[2J");
+	});
+
+	test("the label is capped at 200 graphemes, never splitting one", async () => {
+		const wide = (raw: string) => panel([task({ label: raw, name: "" })], 900).then((rows) => strip(rows.a1!));
+		expect(await wide("x".repeat(300))).toContain("x".repeat(200));
+		expect(await wide("x".repeat(300))).not.toContain("x".repeat(201));
+		// CJK: 200 characters are kept, one per grapheme.
+		const cjk = await wide("가".repeat(250));
+		expect(cjk).toContain("가".repeat(200));
+		expect(cjk).not.toContain("가".repeat(201));
+		// A skin-tone emoji is 4 UTF-16 code units but one grapheme; the boundary falls on whole ones.
+		// A ZWJ family is one grapheme as well.
+		const zwj = await wide(`${"x".repeat(199)}👨‍👩‍👧👨‍👩‍👧`);
+		expect(zwj).toContain(`${"x".repeat(199)}👨‍👩‍👧`);
+		expect(zwj).not.toContain("👨‍👩‍👧👨‍👩‍👧");
+		const family = "👍🏽";
+		expect(await wide(`${"x".repeat(199)}${family}${family}`)).toContain(`${"x".repeat(199)}${family}`);
+		expect(await wide(`${"x".repeat(199)}${family}${family}`)).not.toContain(`${family}${family}`);
+		// Flags are two code points per grapheme.
+		expect(await wide("🇰🇷".repeat(250))).toContain("🇰🇷".repeat(200));
+		expect(await wide("🇰🇷".repeat(250))).not.toContain("🇰🇷".repeat(201));
+		// Combining marks stay with their base.
+		expect(await wide(`${"e\u0301".repeat(250)}`)).not.toContain("e\u0301".repeat(201));
+	});
+
+	test("a label equal to the name is dropped, also after sanitizing", async () => {
+		const row = strip((await panel([task({ name: "reviewer", label: "  reviewer\n" })])).a1!);
+		expect(row.split("reviewer")).toHaveLength(2);
+	});
+
+	test("all four statuses: running shows time, paused a word, completed ✓, failed ✘, killed ✘", async () => {
+		const rows = await panel(["running", "paused", "completed", "failed", "killed"].map((status) => task({ id: status, status })));
+		expect(strip(rows.running!)).toEndWith("· 3m");
+		expect(strip(rows.paused!)).toEndWith("· paused");
+		expect(strip(rows.completed!)).toEndWith("· ✓");
+		expect(strip(rows.failed!)).toEndWith("· ✘");
+		expect(strip(rows.killed!)).toEndWith("· ✘");
+		expect(colorBefore(rows.completed!, "✓")).toContain(COLORS.green);
+		expect(colorBefore(rows.failed!, "✘")).toContain(RED);
+	});
+
+	test("narrowing only removes text: the label is cut first, then the bar, token count, effort and running time drop", async () => {
+		const seen = async (columns: number) => {
+			const row = (await panel([task()], columns)).a1;
+			return row === undefined ? null : strip(row);
+		};
+		const wide = (await seen(160))!;
+		expect(wide).toContain("Reading statusline.sh");
+		expect(wide).toContain("high");
+		expect(wide).toContain("312k/1M");
+		let previous = wide.length;
+		let last = wide;
+		// The row only ever loses text as it narrows, and shrinks within every width.
+		for (const columns of [120, 100, 80, 70, 60, 50, 44, 40, 36, 32, 28, 24, 20]) {
+			const v = await seen(columns);
+			if (v === null) break;
+			expect(Bun.stringWidth(v)).toBeLessThanOrEqual(columns);
+			expect(v.length).toBeLessThanOrEqual(previous);
+			previous = v.length;
+			last = v;
+		}
+		// The narrowest row that fits keeps the model chip and the gauge, and has lost the label and effort.
+		expect(last).toContain("Opus 5.5");
+		expect(last).not.toContain("Reading");
+		expect(last).not.toContain("high");
+		expect(last).not.toContain("312k/1M");
+	});
+
+	test("12 columns: no rows, so the host keeps its default rows", async () => {
+		expect(await panel([task(), task({ id: "b", status: "completed" })], 12)).toEqual({});
+		const { out } = await render(harness(), { columns: 12, tasks: [task()] }, ["--subagents"]);
+		expect(out).toBe("");
 	});
 
 	test("plain glyphs avoid private-use characters; the theme and color depth follow the settings", async () => {

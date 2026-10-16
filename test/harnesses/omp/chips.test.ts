@@ -106,4 +106,43 @@ describe("omp chips", () => {
 		}
 		expect(writes).toEqual([]);
 	});
+
+	test("running subagents of omp's registry show as the ◈ chip", async () => {
+		const dir = path.join(tmp, "plain");
+		mkdirSync(dir, { recursive: true });
+		const h = fakeOmp(dir);
+		await ompStatusline(h.pi, h.host);
+		await h.emit("session_start", {}, h.ctx());
+		const row = () => {
+			for (const tick of h.state.ticks) tick();
+			return draw(h.widgets[0]?.content, 200)[0] ?? "";
+		};
+		expect(row()).not.toContain("◈");
+		h.state.registry.push({ kind: "main", status: "running" }, { kind: "sub", status: "running" }, { kind: "sub", status: "running" }, { kind: "sub", status: "idle" }, { kind: "advisor", status: "running" });
+		expect(row()).toContain("◈ 2");
+		h.state.registry.length = 0;
+		expect(row()).not.toContain("◈");
+	});
+
+	test("subagents = false in the config file hides the chip", async () => {
+		config("subagents = false\n");
+		const dir = path.join(tmp, "plain");
+		mkdirSync(dir, { recursive: true });
+		const h = fakeOmp(dir);
+		h.state.registry.push({ kind: "sub", status: "running" });
+		await ompStatusline(h.pi, h.host);
+		await h.emit("session_start", {}, h.ctx());
+		for (const tick of h.state.ticks) tick();
+		expect(draw(h.widgets[0]?.content, 200)[0]).not.toContain("◈");
+	});
+
+	test("without the host registry the chip is absent", async () => {
+		const dir = path.join(tmp, "plain");
+		mkdirSync(dir, { recursive: true });
+		const h = fakeOmp(dir);
+		delete h.host.runningSubagents;
+		await ompStatusline(h.pi, h.host);
+		await h.emit("session_start", {}, h.ctx());
+		expect(draw(h.widgets[0]?.content, 200)[0]).not.toContain("◈");
+	});
 });

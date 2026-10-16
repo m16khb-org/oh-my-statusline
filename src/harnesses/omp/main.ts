@@ -83,6 +83,11 @@ async function loadHostModules(): Promise<HostModules> {
 		const ai = await import("@oh-my-pi/pi-ai");
 		host.serviceTierFamily = ai.serviceTierFamily;
 	} catch {}
+	try {
+		// The same filter as omp's own running-subagents badge (pi-tui overlays/running-subagent-badge.ts).
+		const { AgentRegistry } = await import("@oh-my-pi/pi-coding-agent/registry/agent-registry");
+		host.runningSubagents = () => AgentRegistry.global().list().filter((ref) => ref.kind === "sub" && ref.status === "running").length;
+	} catch {}
 	return host;
 }
 
@@ -238,7 +243,7 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 					? { usedPct: contextUsage.percent, tokens: contextUsage.tokens, windowSize: contextUsage.contextWindow }
 					: null,
 			limits: usageWindows(usage.value, model, identity),
-			counts: null,
+			counts: config.subagents && host.runningSubagents ? { subagents: host.runningSubagents(), shells: 0 } : null,
 			env: extra.env,
 			todayCostUsd: extra.todayCostUsd,
 		});

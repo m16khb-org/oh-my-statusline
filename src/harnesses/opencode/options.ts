@@ -13,6 +13,8 @@ export interface Options {
 	git: boolean;
 	lines: boolean;
 	counts: boolean;
+	/** Count running subagents (the shared config's `subagents`, not a plugin option); shells are counted regardless. */
+	subagents: boolean;
 	cost: boolean;
 	elapsed: boolean;
 	context: boolean;
@@ -39,7 +41,7 @@ function number(raw: Readonly<Record<string, unknown>>, key: string, fallback: n
 }
 
 /** Normalize the plugin options; anything missing or of the wrong type takes its default. */
-export function readOptions(raw: Readonly<Record<string, unknown>> = {}, theme: ThemeName = "dark"): Options {
+export function readOptions(raw: Readonly<Record<string, unknown>> = {}, theme: ThemeName = "dark", subagents = true): Options {
 	return {
 		theme,
 		glyphs: raw.glyphs === "plain" ? "plain" : "powerline",
@@ -49,6 +51,7 @@ export function readOptions(raw: Readonly<Record<string, unknown>> = {}, theme: 
 		git: flag(raw, "git", true),
 		lines: flag(raw, "lines", true),
 		counts: flag(raw, "counts", true),
+		subagents,
 		cost: flag(raw, "cost", true),
 		elapsed: flag(raw, "elapsed", true),
 		context: flag(raw, "context", true),

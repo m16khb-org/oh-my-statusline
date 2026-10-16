@@ -33,9 +33,25 @@ export function agentModelLabel(model: string): string {
 	return `${family[0]!.toUpperCase()}${family.slice(1)}${version.length ? ` ${version.join(".")}` : ""}`;
 }
 
-/** One line of at most 200 characters: control-character runs become a space, ends trimmed. */
+const ESCAPE_SEQUENCE = /\u001b\[[0-?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g;
+// C0, DEL, C1, zero-width space, direction marks and bidi overrides/isolates, then any whitespace
+// run. ZWNJ/ZWJ (U+200C/200D) stay: emoji sequences and several scripts need them.
+const INVISIBLE_OR_SPACE = /[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\s]+/g;
+const LABEL_LIMIT = 200;
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/** One line of at most 200 graphemes: escape sequences and invisible characters collapse to one space, ends trimmed. */
 function oneLine(text: string): string {
-	return text.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 200);
+	const line = text.replace(ESCAPE_SEQUENCE, " ").replace(INVISIBLE_OR_SPACE, " ").trim();
+	if (line.length <= LABEL_LIMIT) return line;
+	let kept = 0;
+	let end = 0;
+	for (const { segment } of graphemes.segment(line)) {
+		if (kept === LABEL_LIMIT) break;
+		kept++;
+		end += segment.length;
+	}
+	return line.slice(0, end).trimEnd();
 }
 
 interface Parts {
