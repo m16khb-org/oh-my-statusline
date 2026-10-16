@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { backup, canOwn, installTree, MARKER, readJsonObject, readMarker, removeTree, sha256, writeJsonObject } from "../../src/infrastructure/install-kit.ts";
+import { backup, canOwn, holdsOnly, installTree, MARKER, runSteps, readJsonObject, readMarker, removeTree, sha256, writeJsonObject } from "../../src/infrastructure/install-kit.ts";
 
 let root: string;
 let source: string;
@@ -105,5 +105,33 @@ describe("JSON settings files", () => {
 		const second = backup(file, at);
 		expect(first).toBe(`${file}.bak-20261017-090507`);
 		expect(second).toBe(`${file}.bak-20261017-090507-1`);
+	});
+});
+
+describe("runSteps and holdsOnly", () => {
+	test("steps run in order, legacy ones announced; a dry run prints them and runs none", () => {
+		const log: string[] = [];
+		const ran: string[] = [];
+		const steps = [
+			{ say: "first", run: () => ran.push("first") },
+			{ say: "second", run: () => ran.push("second"), legacy: true },
+		];
+		runSteps(steps, { log: (line) => log.push(line) });
+		expect(ran).toEqual(["first", "second"]);
+		expect(log).toEqual(["Migrating: second"]);
+		runSteps(steps, { dryRun: true, log: (line) => log.push(line) });
+		expect(ran).toEqual(["first", "second"]);
+		expect(log.slice(1)).toEqual(["[dry-run] first", "[dry-run] second"]);
+	});
+
+	test("a directory holds only the allowed names, and every required one", () => {
+		const dir = path.join(root, "held");
+		mkdirSync(dir);
+		writeFileSync(path.join(dir, "a"), "");
+		expect(holdsOnly(dir, ["a", "b"], ["a"])).toBe(true);
+		expect(holdsOnly(dir, ["a", "b"], ["b"])).toBe(false);
+		writeFileSync(path.join(dir, "c"), "");
+		expect(holdsOnly(dir, ["a", "b"])).toBe(false);
+		expect(holdsOnly(path.join(root, "missing"), ["a"])).toBe(false);
 	});
 });

@@ -10,8 +10,16 @@ for what your font and locale can draw, and the colors for what your terminal ca
 | `NO_COLOR` | any non-empty value | unset |
 | `STATUSLINE_THEME` / `theme` | `auto`, `dark`, `light` | `auto` |
 
-Precedence is the usual one: defaults, then the config file, then the environment, then flags.
-`NO_COLOR` is the exception: it is never overridden (see below).
+Precedence, lowest to highest: defaults, the choices `./install.sh` recorded (for example `--plain`), the config
+file, the environment, then flags. `NO_COLOR` is the exception: it is never overridden (see below).
+
+Every harness follows these rules, with two notes (the install-time `--plain` choice is in
+[INSTALL.md](../INSTALL.md#fonts-and-display-modes)):
+
+- **OpenCode** follows the TUI's light/dark mode for `theme`. Only `colors = "none"` / `NO_COLOR` change its
+  colors (the footer is drawn without any); other depths make no difference, because the TUI draws RGB itself.
+- **Codex** runs inside tmux, which draws 24-bit color; that is an install choice, so `colors` and `NO_COLOR`
+  override it.
 
 ## powerline (default)
 

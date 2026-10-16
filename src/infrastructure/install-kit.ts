@@ -148,3 +148,32 @@ export function writeJsonObject(file: string, value: JsonObject): void {
 	chmodSync(tmp, mode);
 	renameSync(tmp, real);
 }
+
+/** One thing an install or uninstall does; `--dry-run` prints `say` instead of running it. */
+export interface Step {
+	say: string;
+	run: () => void;
+	/** Part of taking over an old standalone install: announced when it runs, not only on a dry run. */
+	legacy?: boolean;
+}
+
+/** Run the steps in order. With `dryRun` nothing runs: each one is printed as `[dry-run] <say>`. */
+export function runSteps(steps: Step[], opts: { dryRun?: boolean; log: (line: string) => void }): void {
+	for (const step of steps) {
+		if (opts.dryRun) opts.log(`[dry-run] ${step.say}`);
+		else {
+			if (step.legacy) opts.log(`Migrating: ${step.say}`);
+			step.run();
+		}
+	}
+}
+
+/** `dir` exists and holds only entries named in `allowed`, and every name in `required`. */
+export function holdsOnly(dir: string, allowed: readonly string[], required: readonly string[] = []): boolean {
+	try {
+		const names = readdirSync(dir);
+		return required.every((name) => names.includes(name)) && names.every((name) => allowed.includes(name));
+	} catch {
+		return false;
+	}
+}
