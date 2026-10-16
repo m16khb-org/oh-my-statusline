@@ -1,8 +1,9 @@
-// Codex telemetry → StatusSnapshot. Codex has no cost, pull request or prompt-cache lifetime,
-// so those stay null: the status line shows what Codex reports and nothing invented.
+// Codex telemetry → StatusSnapshot. Codex has no cost or prompt-cache lifetime and reports no
+// pull request (the collector reads it with gh/glab), so those stay null
+// without data: the status line shows what Codex reports and nothing invented.
 
 import { toDirInfo } from "../../domain/model/dir.ts";
-import { type GitState, type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
+import { type EnvChips, type GitState, type PrState, type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
 import type { RolloutState } from "./rollout.ts";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-";
@@ -50,6 +51,10 @@ export interface PayloadInput {
 	linesAdded: number;
 	linesRemoved: number;
 	git: { top: string; main: string; state: GitState | null } | null;
+	/** The gh/glab pull request of the branch; Codex itself reports none. */
+	pr?: PrState | null;
+	env?: EnvChips | null;
+	todayCostUsd?: number | null;
 }
 
 export function snapshotFor(state: RolloutState, input: PayloadInput): StatusSnapshot {
@@ -95,11 +100,13 @@ export function snapshotFor(state: RolloutState, input: PayloadInput): StatusSna
 		effort: typeof state.effort === "string" ? state.effort : "",
 		dir: toDirInfo({ cwd, top: input.git?.top, main: input.git?.main }),
 		git: input.git?.state ?? null,
-		pr: null,
+		pr: input.pr ?? null,
 		stats: { costUsd: null, durationMs: Math.max(0, input.nowMs - startedMs), linesAdded: input.linesAdded, linesRemoved: input.linesRemoved },
 		cache,
 		context,
 		limits,
 		counts: null,
+		env: input.env,
+		todayCostUsd: input.todayCostUsd,
 	});
 }

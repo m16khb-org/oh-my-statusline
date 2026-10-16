@@ -75,6 +75,27 @@ export function demoCases(nowMs: number): DemoCase[] {
 	];
 }
 
+/**
+ * A remote session in tmux inside a virtualenv, with today's cost: the environment chips and the
+ * `Σ` stat. Separate from demoCases, which stays one case per harness.
+ */
+export function demoChipsCase(nowMs: number): DemoCase {
+	return {
+		title: "Environment chips: over SSH, in tmux, in a virtualenv, plus today's cost across harnesses",
+		snapshot: toSnapshot("claude", {
+			model: { name: "Opus 5.5", family: "claude-opus-5-5[1m]" },
+			effort: "high",
+			dir: { name: "my-app", relative: "", worktree: null },
+			git: { branch: "main", modified: 1 },
+			stats: { costUsd: 4.21, durationMs: 1_380_000, linesAdded: 156, linesRemoved: 23 },
+			context: { usedPct: 28, tokens: 283_000, windowSize: 1_000_000 },
+			limits: [{ label: "5h", usedPct: 41, resetsAtMs: nowMs + 4_320_000, windowMs: 18_000_000 }],
+			env: { ssh: "dev-box", tmux: "work:editor", venv: ".venv", k8s: null },
+			todayCostUsd: 12.34,
+		}),
+	};
+}
+
 /** Agent panel rows for the demo: running, just started, and finished. */
 export function demoAgents(nowMs: number): RunningAgent[] {
 	return (

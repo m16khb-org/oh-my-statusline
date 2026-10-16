@@ -6,6 +6,7 @@ import { rgbToHex } from "../../domain/model/values.ts";
 import type { StatusSnapshot } from "../../domain/model/snapshot.ts";
 import { renderCells } from "../../domain/render/statusline.ts";
 import type { Context } from "@opencode/plugin/tui/context";
+import type { AmbientReading } from "../../infrastructure/ambient.ts";
 import type { GitView } from "./git-watcher.ts";
 import type { Options } from "./options.ts";
 import { textWidth } from "./runtime.ts";
@@ -57,7 +58,7 @@ export function homeDirectory(context: TuiContext): string | undefined {
 }
 
 /** The session view: everything the line can show while a session is open. */
-export function sessionInput(context: TuiContext, sessionID: string, git: GitView): StatusInput {
+export function sessionInput(context: TuiContext, sessionID: string, git: GitView, ambient?: AmbientReading): StatusInput {
 	const { data } = context;
 	const session = data.session.get(sessionID);
 	const location = session?.location ?? context.location ?? data.location.default();
@@ -87,11 +88,12 @@ export function sessionInput(context: TuiContext, sessionID: string, git: GitVie
 		costUsd: data.session.cost(sessionID),
 		createdMs: session?.time?.created,
 		context: contextUsage(data.session.message.list(sessionID), models),
+		...ambient,
 	};
 }
 
 /** The home view: the same chips, without a session to describe. */
-export function homeInput(context: TuiContext, git: GitView): StatusInput {
+export function homeInput(context: TuiContext, git: GitView, ambient?: AmbientReading): StatusInput {
 	const { data } = context;
 	const location = context.location ?? data.location.default();
 	const models = (location ? data.location.model.list(location) : undefined) ?? [];
@@ -101,6 +103,7 @@ export function homeInput(context: TuiContext, git: GitView): StatusInput {
 		branch: location ? data.location.vcs.info(location)?.branch?.current : undefined,
 		git,
 		costUsd: 0,
+		...ambient,
 	};
 }
 

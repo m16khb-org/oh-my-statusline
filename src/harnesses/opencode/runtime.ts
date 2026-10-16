@@ -5,6 +5,8 @@
 // measured with Bun.stringWidth only when it exists.
 
 import { execFile } from "node:child_process";
+import { accessSync, constants } from "node:fs";
+import path from "node:path";
 import type { CommandRunner } from "../../infrastructure/process.ts";
 
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -32,6 +34,19 @@ export const nodeRunner: CommandRunner = (cmd, opts = {}) => {
 	}
 	return promise;
 };
+
+/** The first executable `bin` on PATH, or null; Bun.which is not available under the Node loader. */
+export function nodeWhich(bin: string, pathEnv: string | undefined = process.env.PATH): string | null {
+	for (const dir of (pathEnv ?? "").split(path.delimiter)) {
+		if (!dir) continue;
+		const candidate = path.join(dir, bin);
+		try {
+			accessSync(candidate, constants.X_OK);
+			return candidate;
+		} catch {}
+	}
+	return null;
+}
 
 function isWide(code: number): boolean {
 	return (

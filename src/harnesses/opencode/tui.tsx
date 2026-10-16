@@ -8,7 +8,7 @@
 // variant, location, session cost and age, context window, running subagents and shells), adds the
 // working tree state from `git`, which the API does not expose, and hands the snapshot to the
 // shared renderer. Data OpenCode has no source for stays out of the snapshot: the 5h/7d/per-model
-// plan limits, the PR/MR chip and the prompt-cache hit rate and TTL (see snapshot.ts).
+// plan limits and the prompt-cache hit rate and TTL (see snapshot.ts).
 //
 // The built-in usage row is turned off in cli.json (`-opencode.prompt.footer`), because it repeats
 // this line's cost and context numbers. install.ts writes that entry.
@@ -16,6 +16,8 @@
 import { Plugin } from "@opencode/plugin/tui";
 import type { Context, SlotMap } from "@opencode/plugin/tui/context";
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import type { Ambient, AmbientReading } from "../../infrastructure/ambient.ts";
+import { createAmbient } from "./ambient.ts";
 import { GitWatcher, NO_GIT, type GitView } from "./git-watcher.ts";
 import { type Options, readOptions } from "./options.ts";
 import { nodeRunner } from "./runtime.ts";
@@ -32,6 +34,30 @@ function useGit(directory: () => string | undefined, options: () => Options) {
 	watcher.start();
 	onCleanup(() => watcher.stop());
 	return view;
+}
+
+let shared: Ambient | undefined;
+
+/**
+ * Environment chips, pull request and today's cost, read in the background and re-read every
+ * second (the pollers decide when a read is actually due). The footers re-fit when a read lands.
+ */
+function useAmbient(directory: () => string | undefined, git: () => GitView) {
+	shared ??= createAmbient();
+	const ambient = shared;
+	const [reading, setReading] = createSignal<AmbientReading>(ambient.read(), { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) });
+	const tick = () => {
+		const cwd = directory();
+		const view = git();
+		const branch = view.state?.branch;
+		const pr = cwd && view.root && branch ? { cwd, key: `${view.root.top}\0${branch}` } : undefined;
+		ambient.poll(() => setReading(ambient.read()), pr);
+		setReading(ambient.read());
+	};
+	tick();
+	const timer = setInterval(tick, 1000);
+	onCleanup(() => clearInterval(timer));
+	return reading;
 }
 
 /** Seconds-resolution clock, for the session age. */
@@ -93,9 +119,10 @@ function Statusline(props: { readonly context: Context; readonly input: () => St
 function SessionStatusline(props: { readonly context: Context; readonly input: FooterInput }) {
 	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode));
 	const git = useGit(() => sessionDirectory(props.context, props.input.sessionID), options);
+	const ambient = useAmbient(() => sessionDirectory(props.context, props.input.sessionID), git);
 	const input = createMemo(() => {
 		const sessionID = props.input.sessionID;
-		return sessionID ? sessionInput(props.context, sessionID, git()) : homeInput(props.context, git());
+		return sessionID ? sessionInput(props.context, sessionID, git(), ambient()) : homeInput(props.context, git(), ambient());
 	});
 	return (
 		<Show when={footerVisible(props.input)}>
@@ -108,7 +135,8 @@ function SessionStatusline(props: { readonly context: Context; readonly input: F
 function HomeStatusline(props: { readonly context: Context }) {
 	const options = createMemo(() => readOptions(props.context.options, props.context.themeMode));
 	const git = useGit(() => homeDirectory(props.context), options);
-	const input = createMemo(() => homeInput(props.context, git()));
+	const ambient = useAmbient(() => homeDirectory(props.context), git);
+	const input = createMemo(() => homeInput(props.context, git(), ambient()));
 	return (
 		<Show when={options().home}>
 			<Statusline context={props.context} input={input} options={options} />

@@ -11,6 +11,7 @@ export interface Config {
 	colors: "auto" | "truecolor" | "256" | "none";
 	chips: { ssh: boolean; tmux: boolean; venv: boolean; k8s: boolean };
 	stats: { chip: boolean };
+	pr: { enabled: boolean };
 	subagents: boolean;
 }
 
@@ -21,6 +22,7 @@ export interface ConfigOverrides {
 	colors?: Config["colors"];
 	chips?: Partial<Config["chips"]>;
 	stats?: Partial<Config["stats"]>;
+	pr?: Partial<Config["pr"]>;
 	subagents?: boolean;
 }
 
@@ -40,6 +42,7 @@ export const DEFAULT_CONFIG: Config = {
 	colors: "auto",
 	chips: { ssh: true, tmux: true, venv: true, k8s: false },
 	stats: { chip: false },
+	pr: { enabled: true },
 	subagents: true,
 };
 
@@ -55,10 +58,11 @@ const ENV_NAMES: Record<string, string> = {
 	colors: "STATUSLINE_COLORS",
 };
 
-type Section = "chips" | "stats";
+type Section = "chips" | "stats" | "pr";
 const SECTIONS: Record<Section, readonly string[]> = {
 	chips: ["ssh", "tmux", "venv", "k8s"],
 	stats: ["chip"],
+	pr: ["enabled"],
 };
 
 const isTable = (value: unknown): value is Record<string, unknown> =>

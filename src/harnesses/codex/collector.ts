@@ -8,11 +8,15 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { resolveConfig } from "../../application/config.ts";
 import { renderStatusline } from "../../application/render-statusline.ts";
+import { Ambient } from "../../infrastructure/ambient.ts";
 import { AppearanceAdapter } from "../../infrastructure/appearance.ts";
 import { FileCache } from "../../infrastructure/cache.ts";
 import { defaultConfigPath, readConfigFile } from "../../infrastructure/config-file.ts";
+import { EnvAdapter, tmuxTarget } from "../../infrastructure/env-chips.ts";
 import { findGitRoot, parseNumstat, parsePorcelain } from "../../infrastructure/git.ts";
+import { PrAdapter } from "../../infrastructure/pr.ts";
 import { run as exec } from "../../infrastructure/process.ts";
+import { readTodayCost } from "../../infrastructure/stats/today.ts";
 import type { GitState } from "../../domain/model/snapshot.ts";
 import { readManifest, ROOT } from "./manifest.ts";
 import { snapshotFor, threadIdFromTitle } from "./payload.ts";
@@ -93,7 +97,13 @@ export async function workingChanges(cwd: string): Promise<{ added: number; remo
 
 /** The loop; returns when the tmux server is gone. */
 export async function collect(runDir: string, env: Record<string, string | undefined> = process.env): Promise<void> {
-	const spec = JSON.parse(readFileSync(path.join(runDir, "launch.json"), "utf8")) as { args: string[]; tmux: string };
+	const spec = JSON.parse(readFileSync(path.join(runDir, "launch.json"), "utf8")) as {
+		args: string[];
+		tmux: string;
+		outerTmux?: string | null;
+		outerPane?: string | null;
+		outerLabel?: string | null;
+	};
 	const socket = path.join(runDir, "tmux.sock");
 	const codexHome = env.CODEX_HOME || path.join(env.HOME || homedir(), ".codex");
 	const clock = { now: () => Date.now() };
@@ -105,6 +115,18 @@ export async function collect(runDir: string, env: Record<string, string | undef
 		file: readConfigFile(defaultConfigPath(env)),
 		env,
 		flags: { colors: "truecolor", ...(installed.glyphs === "plain" && !env.STATUSLINE_GLYPHS ? { glyphs: "plain" as const } : {}) },
+	});
+
+	// The tmux chip describes the user's OUTER tmux, recorded at launch, never Codex's private server.
+	const ambient = new Ambient({
+		clock,
+		config,
+		env,
+		adapter: new EnvAdapter(),
+		tmux: tmuxTarget({ TMUX: spec.outerTmux ?? undefined, TMUX_PANE: spec.outerPane ?? undefined }),
+		initialTmux: spec.outerLabel ?? null,
+		pr: new PrAdapter(),
+		todayCost: async () => readTodayCost({ env, nowMs: clock.now() }),
 	});
 
 	const fallback = initialState(codexHome, spec.args);
@@ -135,6 +157,8 @@ export async function collect(runDir: string, env: Record<string, string | undef
 				status = { cwd, at: now, state: raw === null ? null : parsePorcelain(raw) };
 			}
 			const root = findGitRoot(cwd);
+			ambient.poll(() => {}, root && status.state?.branch ? { cwd, key: `${root.top}\0${status.state.branch}` } : undefined);
+			const extra = ambient.read();
 			const snapshot = snapshotFor(state, {
 				cwd: paneCwd,
 				startedMs,
@@ -142,6 +166,9 @@ export async function collect(runDir: string, env: Record<string, string | undef
 				linesAdded: numstat.added,
 				linesRemoved: numstat.removed,
 				git: root && status.state ? { ...root, state: status.state } : null,
+				pr: extra.pr,
+				env: extra.env,
+				todayCostUsd: extra.todayCostUsd,
 			});
 			const theme = config.theme === "auto" ? await appearance.theme() : config.theme;
 			// Both rows keep a 4-cell margin: the pane's right edge is never painted.

@@ -106,6 +106,21 @@ export interface RunningAgent {
 	startedAtMs: number | null;
 }
 
+/**
+ * Environment chips: where this session runs. Each is the chip's text, or null when it does not
+ * apply (not over SSH, not in tmux, no virtualenv, k8s off or unavailable).
+ */
+export interface EnvChips {
+	/** This machine's short hostname, when the session is reached over SSH. */
+	ssh: string | null;
+	/** `session:window` of the user's tmux. */
+	tmux: string | null;
+	/** Name of the active Python virtualenv or conda environment. */
+	venv: string | null;
+	/** The current kubectl context. */
+	k8s: string | null;
+}
+
 export interface StatusSnapshot {
 	harness: HarnessId;
 	model: ModelInfo;
@@ -120,6 +135,10 @@ export interface StatusSnapshot {
 	limits: LimitWindow[];
 	counts: RunningCounts | null;
 	agents?: RunningAgent[];
+	/** Present only when at least one environment chip applies. */
+	env?: EnvChips;
+	/** Today's cost across all harnesses in US dollars; absent when unknown or the chip is off. */
+	todayCostUsd?: number;
 }
 
 const FIVE_HOURS_MS = 18_000_000;
@@ -218,6 +237,13 @@ function runningAgents(raw: unknown): RunningAgent[] {
 	return out;
 }
 
+function envChips(raw: unknown): EnvChips | null {
+	const e = record(raw);
+	if (!e) return null;
+	const chips: EnvChips = { ssh: text(e.ssh) || null, tmux: text(e.tmux) || null, venv: text(e.venv) || null, k8s: text(e.k8s) || null };
+	return chips.ssh || chips.tmux || chips.venv || chips.k8s ? chips : null;
+}
+
 /**
  * Normalize untrusted snapshot-shaped data (a harness mapping or a JSON fixture) into a valid
  * StatusSnapshot. Never throws: malformed parts become null, empty, or zero.
@@ -261,5 +287,9 @@ export function toSnapshot(harness: HarnessId, raw: unknown): StatusSnapshot {
 		};
 	}
 	if (Array.isArray(r.agents)) snapshot.agents = runningAgents(r.agents);
+	const env = envChips(r.env);
+	if (env) snapshot.env = env;
+	const today = finiteNumber(r.todayCostUsd);
+	if (today !== undefined && today >= 0) snapshot.todayCostUsd = today;
 	return snapshot;
 }

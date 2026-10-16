@@ -4,7 +4,7 @@
 // becomes `null` (the segment is omitted) instead of the text "null".
 
 import type { GitReading } from "../../application/ports.ts";
-import { type LimitWindow, type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
+import { type EnvChips, type LimitWindow, type PrState, type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
 import { toDirInfo } from "../../domain/model/dir.ts";
 import { finiteNumber } from "../../domain/model/values.ts";
 
@@ -47,6 +47,12 @@ export interface SessionContext {
 	/** Model-scoped weekly windows (e.g. Fable) the status input does not carry. */
 	scopedLimits: readonly LimitWindow[];
 	cwd: string;
+	/** Environment chips (ssh, tmux, venv, k8s); absent when none apply. */
+	env?: EnvChips | null;
+	/** The cached gh/glab pull request, used only when the session JSON names none. */
+	pr?: PrState | null;
+	/** Today's cost across all harnesses; null or absent leaves the chip out. */
+	todayCostUsd?: number | null;
 }
 
 function limitWindow(label: string, window: unknown, windowMs: number): LimitWindow[] {
@@ -85,7 +91,7 @@ export function toClaudeSnapshot(session: Json, ctx: SessionContext): StatusSnap
 		effort: text(asObject(session.effort).level),
 		dir: { ...dir, worktree },
 		git: ctx.git?.state ?? null,
-		pr: { number: pr.number, url: text(pr.url), state: text(pr.review_state), kind: text(pr.kind) },
+		pr: wholeNumber(pr.number) > 0 ? { number: pr.number, url: text(pr.url), state: text(pr.review_state), kind: text(pr.kind) } : (ctx.pr ?? null),
 		// Line totals come from the working tree, not cost.total_lines_*: that counts every
 		// Edit/Write, including files outside the repository and edits since undone or committed.
 		stats: {
@@ -109,5 +115,7 @@ export function toClaudeSnapshot(session: Json, ctx: SessionContext): StatusSnap
 			...limitWindow("7d", limits.seven_day, SEVEN_DAYS_MS),
 			...ctx.scopedLimits,
 		],
+		env: ctx.env,
+		todayCostUsd: ctx.todayCostUsd,
 	});
 }

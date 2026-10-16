@@ -78,6 +78,8 @@ export interface Glyphs {
 	minus: string;
 	/** A known window without a reading. */
 	none: string;
+	/** Marks today's cost across all harnesses. */
+	today: string;
 }
 
 // Powerline glyphs live in the private use area; escapes keep editors from stripping them.
@@ -97,6 +99,7 @@ const UNICODE = {
 	shells: "⌘",
 	minus: "−",
 	none: "—",
+	today: "Σ",
 } as const;
 
 export const GLYPHS: Record<GlyphMode, Glyphs> = {
@@ -124,6 +127,7 @@ export const GLYPHS: Record<GlyphMode, Glyphs> = {
 		shells: "sh",
 		minus: "-",
 		none: "-",
+		today: "S",
 	},
 };
 

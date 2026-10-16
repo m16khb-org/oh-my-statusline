@@ -180,3 +180,26 @@ describe("demo", () => {
 		expect(lines(demoInput(NOW))[0]).toContain(" my-app/…/lib/statusline ");
 	});
 });
+
+describe("pull request, environment chips and today's cost", () => {
+	const PR = { number: 8, url: "https://github.com/o/r/pull/8", state: "pending", kind: "pr" } as const;
+	const withGit = (extra: Partial<StatusInput> = {}) => input({ git: repo("/home/you/src/my-app"), ...extra });
+
+	test("the gh/glab pull request is drawn; without one there is no PR chip", () => {
+		expect(lines(withGit({ pr: PR }))[0]).toContain("#8");
+		expect(lines(withGit({ pr: null }))[0]).not.toMatch(/#\d/);
+		expect(lines(withGit())[0]).not.toMatch(/#\d/);
+	});
+
+	test("environment chips and Σ follow the counts chip and the stats", () => {
+		const row = lines(withGit({ env: { ssh: "dev-box", tmux: "w:1", venv: null, k8s: null }, todayCostUsd: 9.99 }))[0]!;
+		expect(row).toContain("ssh dev-box");
+		expect(row).toContain("tmux w:1");
+		expect(row).not.toContain("venv");
+		expect(row).toContain("Σ $9.99");
+	});
+
+	test("nothing extra without the data", () => {
+		expect(lines(withGit())[0]).toBe(lines(withGit({ env: null, todayCostUsd: null, pr: null }))[0]);
+	});
+});

@@ -23,4 +23,6 @@ nothing outside itself; `test/architecture.test.ts` enforces that.
 | **Context usage** | Used share of the context window, tokens, window size, and whether the request is billed at the long-context rate (`exceeds200k`, past 200k tokens unless the harness says otherwise). |
 | **Limit window** | A usage-limit window (`5h`, `7d`, or a tier-scoped one such as `Fable`) with used share, reset time, window length, and the scope (`scopedModel`). Scoped windows are the last to drop on narrow terminals. |
 | **Running counts** | Running subagents (`◈`) and shells (`⌘`). |
+| **Env chips** | Optional `env` of a snapshot: `ssh` (short hostname), `tmux` (`session:window`), `venv` (environment name), `k8s` (kubectl context), each text or null. Absent unless one applies. See [feature-matrix.md](feature-matrix.md). |
+| **Today's cost** | Optional `todayCostUsd` of a snapshot: today's stored cost across all harnesses, drawn as `Σ $X.XX` (ASCII `S $X.XX`). |
 | **Running agent** | One subagent row of the agent panel: model, effort, name, label, tokens, window size, status, start time. |

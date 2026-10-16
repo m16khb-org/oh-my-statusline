@@ -9,7 +9,7 @@ import type { UsageReport } from "../../../src/harnesses/omp/host.ts";
 import ompStatusline from "../../../src/harnesses/omp/main.ts";
 import { draw, fakeOmp, mount, OPUS, plain } from "./fake-omp.ts";
 
-const ENV_KEYS = ["XDG_CONFIG_HOME", "STATUSLINE_GLYPHS", "STATUSLINE_COLORS", "STATUSLINE_THEME", "OMP_STATUSLINE_NATIVE", "NO_COLOR", "COLORTERM", "PATH"];
+const ENV_KEYS = ["XDG_CONFIG_HOME", "STATUSLINE_GLYPHS", "STATUSLINE_COLORS", "STATUSLINE_THEME", "OMP_STATUSLINE_NATIVE", "NO_COLOR", "COLORTERM", "PATH", "SSH_CONNECTION", "TMUX", "TMUX_PANE", "VIRTUAL_ENV", "CONDA_DEFAULT_ENV", "HOME", "XDG_CACHE_HOME", "TZ"];
 let saved: Record<string, string | undefined>;
 let tmp: string;
 
@@ -22,6 +22,8 @@ beforeEach(() => {
 	process.env.STATUSLINE_THEME = "dark";
 	delete process.env.OMP_STATUSLINE_NATIVE;
 	delete process.env.NO_COLOR;
+	// The environment chips read the real environment: a developer's shell must not change the rows.
+	for (const key of ["SSH_CONNECTION", "TMUX", "TMUX_PANE", "VIRTUAL_ENV", "CONDA_DEFAULT_ENV"]) delete process.env[key];
 });
 
 afterEach(() => {

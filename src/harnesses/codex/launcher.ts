@@ -8,6 +8,7 @@
 import { accessSync, constants as fsConstants, mkdirSync, mkdtempSync, readFileSync, readSync, openSync, closeSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { constants as osConstants, tmpdir } from "node:os";
 import path from "node:path";
+import { EnvAdapter, tmuxTarget } from "../../infrastructure/env-chips.ts";
 import { collect } from "./collector.ts";
 import { readManifest, ROOT } from "./manifest.ts";
 import { runTmux, shellQuote, tmuxConf } from "./tmux.ts";
@@ -120,6 +121,14 @@ interface LaunchSpec {
 	args: string[];
 	codex: string;
 	tmux: string;
+	/**
+	 * The user's own tmux, recorded at launch: Codex runs inside a private tmux server, so the
+	 * tmux chip must describe the OUTER one. `outerTmux` is `$TMUX`, `outerPane` is `$TMUX_PANE`,
+	 * `outerLabel` the `session:window` they resolved to then. All null outside tmux.
+	 */
+	outerTmux?: string | null;
+	outerPane?: string | null;
+	outerLabel?: string | null;
 }
 
 /** Inside the tmux pane: run Codex, record its exit code, end the session. */
@@ -150,6 +159,13 @@ function makeRunDir(): string {
 	return mkdtempSync(path.join(base, "codex-statusline-"));
 }
 
+/** The user's tmux as the launcher sees it, before Codex moves into its own private server. */
+export async function outerTmux(env: Env, adapter = new EnvAdapter()): Promise<Required<Pick<LaunchSpec, "outerTmux" | "outerPane" | "outerLabel">>> {
+	const target = tmuxTarget(env);
+	if (!target) return { outerTmux: null, outerPane: null, outerLabel: null };
+	return { outerTmux: env.TMUX ?? null, outerPane: env.TMUX_PANE ?? null, outerLabel: await adapter.tmux(target) };
+}
+
 async function launch(real: string, args: string[], env: Env): Promise<number> {
 	const tmux = Bun.which("tmux", { PATH: env.PATH });
 	if (!tmux) {
@@ -169,7 +185,7 @@ async function launch(real: string, args: string[], env: Env): Promise<number> {
 	process.on("SIGHUP", onSignal);
 	process.on("SIGTERM", onSignal);
 	try {
-		const spec: LaunchSpec = { args, codex: real, tmux };
+		const spec: LaunchSpec = { args, codex: real, tmux, ...(await outerTmux(env)) };
 		writeFileSync(path.join(runDir, "launch.json"), JSON.stringify(spec));
 		mkdirSync(path.join(runDir, "cache"));
 		// The status format `cat`s these files, so they must exist before the first collector tick.

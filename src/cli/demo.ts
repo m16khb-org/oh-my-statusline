@@ -1,6 +1,6 @@
 // Preview every harness's status line with fake session data.
 //
-//   bun run demo [--case all|claude|codex|omp|opencode|agents] [--width N]
+//   bun run demo [--case all|claude|codex|omp|opencode|chips|agents] [--width N]
 //                [--theme dark|light] [--glyphs powerline|plain|ascii] [--colors 24|256|none]
 // NO_COLOR (non-empty) drops every color and bold; see docs/display-modes.md.
 
@@ -8,10 +8,10 @@ import { colorDepth, DEFAULT_CONFIG } from "../application/config.ts";
 import type { Cell, GlyphMode, RenderContext, ThemeName } from "../domain/render/cells.ts";
 import { emit } from "../domain/render/cells.ts";
 import { renderAgentRows } from "../domain/render/agents.ts";
-import { demoAgents, demoCases } from "../domain/render/demo.ts";
+import { demoAgents, demoCases, demoChipsCase } from "../domain/render/demo.ts";
 import { renderCells } from "../domain/render/statusline.ts";
 
-const CASES = ["all", "claude", "codex", "omp", "opencode", "agents"] as const;
+const CASES = ["all", "claude", "codex", "omp", "opencode", "chips", "agents"] as const;
 type CaseName = (typeof CASES)[number];
 
 function flag(argv: readonly string[], name: string): string | undefined {
@@ -36,8 +36,9 @@ export function demo(argv: readonly string[], env: Record<string, string | undef
 	// The demo's PR links are fake; colorless output is for piping and diffing, so it carries no ESC at all.
 	const line = (cells: Cell[]): string => emit(colors === 0 ? cells.map(({ url: _url, ...rest }) => rest) : cells, colors);
 	let out = "";
-	for (const c of demoCases(nowMs)) {
-		if (pick !== "all" && pick !== c.snapshot.harness) continue;
+	const cases = [...demoCases(nowMs).map((c) => ({ ...c, name: c.snapshot.harness as string })), { ...demoChipsCase(nowMs), name: "chips" }];
+	for (const c of cases) {
+		if (pick !== "all" && pick !== c.name) continue;
 		out += `\n${dim(`── ${c.title} ──`)}\n${renderCells(c.snapshot, ctx).map(line).join("\n")}\n`;
 	}
 	if (pick === "agents") {

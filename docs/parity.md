@@ -176,3 +176,21 @@ returns the whole tree), which is now documented in `view.ts`.
 | GLM chip in omp | silver | teal | OpenCode's provider table is the superset. |
 | OpenCode gradient blend | rounded | truncated | Three of four renderers truncated. |
 | OpenCode ctx at exactly 0% | row hidden | `0%` shown | `0` is a reading; only an unknown share is hidden. |
+
+## Added after the port: chips, PR parity and today's cost
+
+New behavior, not present in any original; covered in `test/domain/env-chips.test.ts`,
+`test/infrastructure/env-chips.test.ts`, `test/stats/today.test.ts` and each harness's
+`chips.test.ts` / `snapshot.test.ts`. The full harness × feature table is in
+[feature-matrix.md](feature-matrix.md).
+
+| Change | Before | Now | Why |
+|---|---|---|---|
+| ssh / tmux / venv / k8s chips | none | after the counts chip; `chips.*` switches (k8s off by default) | Show where the session runs. |
+| Width ladder | cache dropped first | env chips and `Σ` drop before cache | They are the least important; snapshots without them step exactly as before. |
+| Codex PR chip | never | gh/glab, 300 s, `pr.enabled` | Data exists (git remote + gh); Codex itself reports none. |
+| OpenCode PR chip | never | gh/glab, 300 s, `pr.enabled` | Same; the command goes through `node:child_process`, PATH lookup through `nodeWhich`. |
+| Claude PR | session JSON only | session JSON, else cached gh/glab | A payload without `pr` is common before the first push. |
+| omp PR | always read | read only when `pr.enabled` | One switch for all harnesses. |
+| Today's cost `Σ` | none | `stats.chip`, background, ≥ 120 s | The stats feature on the status line. |
+| Codex tmux | n/a | the user's outer tmux, recorded at launch | Codex runs in a private tmux server. |

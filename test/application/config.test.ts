@@ -19,6 +19,7 @@ describe("resolveConfig", () => {
 			colors: "auto",
 			chips: { ssh: true, tmux: true, venv: true, k8s: false },
 			stats: { chip: false },
+			pr: { enabled: true },
 			subagents: true,
 		});
 		expect(warnings).toEqual([]);
@@ -50,6 +51,17 @@ describe("resolveConfig", () => {
 		const bad = resolve("claude", { STATUSLINE_THEME: "neon" });
 		expect(bad.config.theme).toBe("light");
 		expect(bad.warnings).toEqual(['invalid STATUSLINE_THEME in environment: "neon"']);
+	});
+
+	test("pr.enabled: on by default; file, harness table and flags switch it, invalid values are skipped", () => {
+		const resolve = (raw: unknown, flags = {}) => resolveConfig({ harness: "codex", file: { raw }, env: {}, flags });
+		expect(resolve({}).config.pr).toEqual({ enabled: true });
+		expect(resolve({ pr: { enabled: false } }).config.pr.enabled).toBe(false);
+		expect(resolve({ pr: { enabled: false }, harness: { codex: { pr: { enabled: true } } } }).config.pr.enabled).toBe(true);
+		expect(resolve({ pr: { enabled: false } }, { pr: { enabled: true } }).config.pr.enabled).toBe(true);
+		const bad = resolve({ pr: { enabled: "no" } });
+		expect(bad.config.pr.enabled).toBe(true);
+		expect(bad.warnings).toEqual(['invalid pr.enabled in config file: "no"']);
 	});
 
 	test("invalid file values are skipped one by one", () => {

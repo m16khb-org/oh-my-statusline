@@ -1,12 +1,12 @@
 // OpenCode's data → the harness-neutral StatusSnapshot.
 //
 // What OpenCode has no data for stays null in the snapshot, so its segments are left out: the
-// 5h/7d/per-model plan limits (`limits` is empty), the PR/MR chip (`pr`), and the prompt-cache
-// hit rate and TTL (`cache`). A disabled option is expressed the same way: its field is null or
+// 5h/7d/per-model plan limits (`limits` is empty), and the prompt-cache hit rate and TTL
+// (`cache`). The PR/MR chip comes from gh/glab, read in the background (ambient.ts). A disabled option is expressed the same way: its field is null or
 // empty, never a flag the renderer would have to know about.
 
 import { toDirInfo } from "../../domain/model/dir.ts";
-import { type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
+import { type EnvChips, type PrState, type StatusSnapshot, toSnapshot } from "../../domain/model/snapshot.ts";
 import type { GitView } from "./git-watcher.ts";
 import type { Options } from "./options.ts";
 
@@ -26,6 +26,10 @@ export interface StatusInput {
 	/** When the session started, epoch milliseconds. */
 	createdMs?: number;
 	context?: ContextUsage;
+	/** Read in the background (see ambient.ts); absent while nothing is known. */
+	pr?: PrState | null;
+	env?: EnvChips | null;
+	todayCostUsd?: number | null;
 }
 
 export interface ContextUsage {
@@ -89,7 +93,7 @@ export function toStatusSnapshot(input: StatusInput, options: Options, nowMs: nu
 		effort: options.effort ? (input.model?.effort ?? "") : "",
 		dir: options.dir ? { name: dir.name, relative: dir.relative, worktree: showWorktree ? worktree : null } : { name: "", relative: "", worktree: null },
 		git: options.git && git.state ? git.state : null,
-		pr: null,
+		pr: input.pr ?? null,
 		stats: {
 			costUsd: options.cost ? input.costUsd : null,
 			durationMs: options.elapsed && input.createdMs !== undefined ? Math.max(0, nowMs - input.createdMs) : 0,
@@ -104,6 +108,8 @@ export function toStatusSnapshot(input: StatusInput, options: Options, nowMs: nu
 				: null,
 		limits: [],
 		counts: options.counts && input.counts ? input.counts : null,
+		env: input.env,
+		todayCostUsd: input.todayCostUsd,
 	});
 }
 

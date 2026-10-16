@@ -1,10 +1,12 @@
 // The two-row powerline status line:
 //
-//   Row 1  [model][effort] [dir] [git] [PR/MR] [◈ ⌘]  cost · duration · +added −removed · cache
+//   Row 1  [model][effort] [dir] [git] [PR/MR] [◈ ⌘] [ssh][tmux][venv][k8s]
+//          cost · duration · +added −removed · cache · Σ today's cost
 //   Row 2  ctx / 5h / 7d / tier-scoped gauges: gradient bar, used %, reset countdown (↻), and a
 //          red ⚠ time-to-limit warning when the window's average pace would exhaust it first.
 //
-// Narrow widths step down a ladder. Row 1 drops cache → lines → duration → cost → PR → effort,
+// Narrow widths step down a ladder. Row 1 first drops the environment chips and today's cost,
+// then cache → lines → duration → cost → PR → effort,
 // then cuts the branch to 20 cells and the directory to the repository name, and finally drops
 // the directory. Row 2 shrinks the bars 10 → 8 → 6 → 0, then hides the token count, the reset
 // countdowns and the tier-scoped windows, and finally the whole row.
@@ -110,9 +112,10 @@ interface Prepared {
 	gitCounts: string;
 	pr: { text: string; bg: Rgb; fg: Rgb; url: string } | null;
 	counts: string;
+	env: { text: string; bg: Rgb }[];
 }
 
-function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
+function prepare(s: StatusSnapshot, g: Glyphs, measure: Measure): Prepared {
 	const git = s.git;
 	let gitCounts = "";
 	let gitBg: Rgb = CHIP.green;
@@ -162,42 +165,53 @@ function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
 	let effortText = s.effort;
 	if (s.model.isFast) effortText = effortText ? `${effortText}${g.dot}fast` : "fast";
 
-	return { effortText, effort: effortColors(s.effort), dirFull, branch, gitBg, gitCounts, pr, counts: counts.join(" ") };
+	// Fixed order; long tmux names and kubectl contexts are cut so one chip cannot take the row.
+	const env: Prepared["env"] = [];
+	if (s.env?.ssh) env.push({ text: `ssh ${clip(s.env.ssh, 24, measure, g.ellipsis)}`, bg: CHIP.orange });
+	if (s.env?.tmux) env.push({ text: `tmux ${clip(s.env.tmux, 24, measure, g.ellipsis)}`, bg: CHIP.silver });
+	if (s.env?.venv) env.push({ text: `venv ${clip(s.env.venv, 24, measure, g.ellipsis)}`, bg: CHIP.teal });
+	if (s.env?.k8s) env.push({ text: `k8s ${clip(s.env.k8s, 24, measure, g.ellipsis)}`, bg: CHIP.purple });
+
+	return { effortText, effort: effortColors(s.effort), dirFull, branch, gitBg, gitCounts, pr, counts: counts.join(" "), env };
 }
 
-/** Row 1 at one detail level: 0 shows everything, each level drops the next least important part. */
+/**
+ * Row 1 at one detail level: 0 shows everything, each level drops the next least important part.
+ * Level 1 drops the environment chips and today's cost; levels 2-9 are the original ladder.
+ */
 function buildRow1(s: StatusSnapshot, p: Prepared, lvl: number, ink: Ink, g: Glyphs, measure: Measure): Cell[] {
 	const row = new RowBuilder(ink, g);
 	if (s.model.name) row.chip(modelColor(`${s.model.family} ${s.model.name}`), CHIP_FG, s.model.name, { bold: true });
-	if (lvl < 6 && p.effortText) row.chip(p.effort.bg, p.effort.fg, p.effortText);
+	if (lvl < 7 && p.effortText) row.chip(p.effort.bg, p.effort.fg, p.effortText);
 	if (s.dir.name) {
-		if (lvl < 7) row.chip(CHIP.blue, CHIP_FG, p.dirFull);
-		else if (lvl < 8) row.chip(CHIP.blue, CHIP_FG, s.dir.name);
+		if (lvl < 8) row.chip(CHIP.blue, CHIP_FG, p.dirFull);
+		else if (lvl < 9) row.chip(CHIP.blue, CHIP_FG, s.dir.name);
 	}
 	if (s.git) {
-		const branch = clip(p.branch, lvl >= 7 ? 20 : 40, measure, g.ellipsis);
+		const branch = clip(p.branch, lvl >= 8 ? 20 : 40, measure, g.ellipsis);
 		row.chip(p.gitBg, CHIP_FG, `${g.branch ? `${g.branch} ` : ""}${branch}${p.gitCounts}`);
 	}
-	if (lvl < 5 && p.pr) row.chip(p.pr.bg, p.pr.fg, p.pr.text, { url: p.pr.url });
+	if (lvl < 6 && p.pr) row.chip(p.pr.bg, p.pr.fg, p.pr.text, { url: p.pr.url });
 	if (p.counts) row.chip(CHIP.cyan, CHIP_FG, p.counts);
+	if (lvl < 1) for (const chip of p.env) row.chip(chip.bg, CHIP_FG, chip.text);
 	row.endChips();
 
 	const { costUsd, durationMs, linesAdded: add, linesRemoved: del } = s.stats;
-	if (lvl < 4 && costUsd !== null && costUsd > 0) {
+	if (lvl < 5 && costUsd !== null && costUsd > 0) {
 		row.statGap();
 		row.put(formatCost(costUsd), ink.dim);
 	}
-	if (lvl < 3 && durationMs >= 60_000) {
+	if (lvl < 4 && durationMs >= 60_000) {
 		row.statGap();
 		row.put(formatDuration(durationMs / 1000), ink.dim);
 	}
-	if (lvl < 2 && add + del > 0) {
+	if (lvl < 3 && add + del > 0) {
 		row.statGap();
 		if (add > 0) row.put(`+${add}`, ink.green);
 		if (add > 0 && del > 0) row.put(" ");
 		if (del > 0) row.put(`${g.minus}${del}`, ink.red);
 	}
-	if (lvl < 1 && s.cache) {
+	if (lvl < 2 && s.cache) {
 		if (s.cache.hitPct !== null) {
 			row.statGap();
 			row.put("cache hit ", ink.dim);
@@ -208,6 +222,11 @@ function buildRow1(s: StatusSnapshot, p: Prepared, lvl: number, ink: Ink, g: Gly
 			row.put("cache ", ink.dim);
 			row.put(formatDuration(s.cache.ttlRemainingMs / 1000), ink.teal);
 		}
+	}
+	if (lvl < 1 && s.todayCostUsd !== undefined) {
+		row.statGap();
+		row.put(`${g.today} `, ink.dim);
+		row.put(formatCost(s.todayCostUsd), ink.teal);
 	}
 	return row.cells;
 }
@@ -262,10 +281,10 @@ export function renderCells(s: StatusSnapshot, ctx: RenderContext): Cell[][] {
 	const measure = ctx.measure ?? countCodePoints;
 	const ink = INK[ctx.theme];
 	const g = glyphSet(ctx.glyphs, ctx.colors);
-	const p = prepare(s, g);
+	const p = prepare(s, g, measure);
 
 	let row1 = buildRow1(s, p, 0, ink, g, measure);
-	for (let lvl = 1; lvl <= 8 && rowWidth(row1, measure) > ctx.width; lvl++) row1 = buildRow1(s, p, lvl, ink, g, measure);
+	for (let lvl = 1; lvl <= 9 && rowWidth(row1, measure) > ctx.width; lvl++) row1 = buildRow1(s, p, lvl, ink, g, measure);
 
 	let row2: Cell[] = [];
 	for (const level of ROW2_LEVELS) {

@@ -26,10 +26,13 @@ import type { PrState, StatusSnapshot } from "../../domain/model/snapshot.ts";
 import { toDirInfo } from "../../domain/model/dir.ts";
 import { toSnapshot } from "../../domain/model/snapshot.ts";
 import { demoCases } from "../../domain/render/demo.ts";
+import { Ambient } from "../../infrastructure/ambient.ts";
+import { EnvAdapter } from "../../infrastructure/env-chips.ts";
 import { defaultConfigPath, readConfigFile } from "../../infrastructure/config-file.ts";
 import { GitAdapter } from "../../infrastructure/git.ts";
 import { PrAdapter } from "../../infrastructure/pr.ts";
 import { type CommandRunner, run } from "../../infrastructure/process.ts";
+import { findBun, todayCostViaProcess } from "../../infrastructure/stats/today-process.ts";
 import { nextPromptCache, type PromptCache, promptCacheState } from "./cache.ts";
 import type {
 	AssistantMessage,
@@ -131,7 +134,7 @@ function overrideNativeStatusLine(pi: OmpApi, host: HostModules): void {
 const clock: ClockPort = { now: () => Date.now() };
 const exec: CommandRunner = (cmd, opts) => run(cmd, { timeoutMs: COMMAND_TIMEOUT_MS, ...opts });
 
-export default async function ompStatusline(pi: OmpApi, hostModules?: HostModules): Promise<void> {
+export default async function ompStatusline(pi: OmpApi, hostModules?: HostModules, runner: CommandRunner = exec): Promise<void> {
 	const host = hostModules ?? (await loadHostModules());
 	// Before the first session starts, so omp builds its status bar from the overridden settings.
 	overrideNativeStatusLine(pi, host);
@@ -141,6 +144,16 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 	const pr = new Poller<PrState>(clock, PR_MAX_AGE_MS, PR_MIN_GAP_MS);
 	const usage = new Poller<UsageReport[]>(clock, USAGE_MAX_AGE_MS, USAGE_MIN_GAP_MS);
 	const config = loadConfig(Bun.env);
+	// Environment chips and today's cost; omp's pull request is read below, on its own events.
+	const ambient = new Ambient({
+		clock,
+		config,
+		env: Bun.env,
+		// omp has no notify API in its host types and is a TUI: the kubectl warning is dropped, never written to stderr.
+		adapter: new EnvAdapter({ exec: runner, warn: () => {} }),
+		// Out of process: the stats collector reads files synchronously and must not block omp.
+		todayCost: () => todayCostViaProcess(runner, findBun((bin) => Bun.which(bin), process.execPath)),
+	});
 	let ctx: OmpContext | undefined;
 	let tui: OmpTui | undefined;
 	let cache: PromptCache | undefined;
@@ -206,12 +219,13 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 		// Null right after compaction: the window has no reading, so the gauge is left out.
 		const hasContext = contextUsage && typeof contextUsage.percent === "number" && contextUsage.contextWindow > 0;
 
+		const extra = ambient.read();
 		const data = toSnapshot("omp", {
 			model: { name: model ? modelLabel(model) : "", family: model?.id ?? "", isFast: isFast(model, configuredTier(model)) },
 			effort: model?.reasoning === false || level === "off" || level === "inherit" ? "" : level,
 			dir: toDirInfo({ cwd: c.cwd, top: reading?.top, main: reading?.main }),
 			git: reading?.state ?? null,
-			pr: pr.value ?? null,
+			pr: config.pr.enabled ? (pr.value ?? null) : null,
 			stats: {
 				costUsd: typeof cost === "number" ? cost : null,
 				durationMs: Number.isFinite(started) ? Math.max(0, nowMs - started) : 0,
@@ -225,6 +239,8 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 					: null,
 			limits: usageWindows(usage.value, model, identity),
 			counts: null,
+			env: extra.env,
+			todayCostUsd: extra.todayCostUsd,
 		});
 		return { data, nowMs };
 	};
@@ -245,7 +261,8 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 		if (!c) return;
 		git.poll(c.cwd, async () => (await gitAdapter.read(c.cwd)) ?? undefined, refresh);
 		const branch = git.value?.state.branch;
-		if (git.value && branch) {
+		ambient.poll(refresh);
+		if (config.pr.enabled && git.value && branch) {
 			pr.poll(`${git.value.top}\0${branch}`, async () => (await prAdapter.read(c.cwd)) ?? undefined, refresh);
 		}
 		const service = c.modelRegistry?.authStorage?.usage;
