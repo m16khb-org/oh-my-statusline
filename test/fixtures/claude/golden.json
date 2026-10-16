@@ -1,0 +1,163 @@
+[
+	{
+		"name": "wide dark truecolor: dirty git, PR, ctx, 5h/7d, scoped Fable",
+		"columns": 140,
+		"env": {
+			"STATUSLINE_THEME": "dark",
+			"COLORTERM": "truecolor"
+		},
+		"session": {
+			"session_id": "t",
+			"model": {
+				"id": "claude-opus-5-5[1m]",
+				"display_name": "Opus 5.5 (1M context)"
+			},
+			"workspace": {
+				"current_dir": "/home/you/src/my-app",
+				"project_dir": "/home/you/src/my-app",
+				"repo": {
+					"host": "github.com",
+					"owner": "octocat",
+					"name": "my-app"
+				}
+			},
+			"cwd": "/home/you/src/my-app",
+			"cost": {
+				"total_cost_usd": 4.2137,
+				"total_duration_ms": 1380000,
+				"total_lines_added": 156,
+				"total_lines_removed": 23
+			},
+			"context_window": {
+				"total_input_tokens": 283000,
+				"context_window_size": 1000000,
+				"used_percentage": 28.3
+			},
+			"exceeds_200k_tokens": true,
+			"effort": {
+				"level": "max"
+			},
+			"rate_limits": {
+				"five_hour": {
+					"used_percentage": 41
+				},
+				"seven_day": {
+					"used_percentage": 18
+				}
+			},
+			"pr": {
+				"number": 512,
+				"url": "https://github.com/octocat/my-app/pull/512",
+				"review_state": "approved"
+			}
+		},
+		"gitRaw": "# branch.oid ca8cb99\n# branch.head main\n# branch.upstream origin/main\n# branch.ab +1 -0\n1 M. N... 100644 100644 100644 a b staged.txt\n1 .M N... 100644 100644 100644 a b mod1.txt\n1 .M N... 100644 100644 100644 a b mod2.txt\n? new.txt\n# diff.lines 12 4\n",
+		"usageRaw": "Fable 250 0",
+		"expected": "\u001b[0;1;38;2;26;27;38;48;2;187;154;247m Opus 5.5 \u001b[0;38;2;187;154;247;48;2;247;118;142m\u001b[0;38;2;26;27;38;48;2;247;118;142m max \u001b[0;38;2;247;118;142;48;2;122;162;247m\u001b[0;38;2;26;27;38;48;2;122;162;247m my-app \u001b[0;38;2;122;162;247;48;2;224;175;104m\u001b[0;38;2;26;27;38;48;2;224;175;104m  main ⇡1 +1 ~2 ?1 \u001b[0;38;2;224;175;104;48;2;115;218;202m\u001b]8;;https://github.com/octocat/my-app/pull/512\u0007\u001b[0;38;2;26;27;38;48;2;115;218;202m #512 ✓ \u001b]8;;\u0007\u001b[0;38;2;115;218;202m\u001b[0;0m  \u001b[0;38;2;115;122;162m$4.21\u001b[0;38;2;84;92;126m · \u001b[0;38;2;115;122;162m23m\u001b[0;38;2;84;92;126m · \u001b[0;38;2;158;206;106m+12\u001b[0;0m \u001b[0;38;2;247;118;142m−4\u001b[0m\n\u001b[0;38;2;115;122;162mctx \u001b[0;38;2;158;206;106m▆\u001b[0;38;2;158;206;106m▆\u001b[0;38;2;158;206;106m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;0m \u001b[0;1;38;2;158;206;106m28%\u001b[0;38;2;224;175;104m 283k\u001b[0;38;2;115;122;162m/1M\u001b[0;38;2;84;92;126m │ \u001b[0;38;2;115;122;162m5h \u001b[0;38;2;158;206;106m▆\u001b[0;38;2;158;206;106m▆\u001b[0;38;2;158;206;106m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;0m \u001b[0;1;38;2;158;206;106m41%\u001b[0;38;2;84;92;126m │ \u001b[0;38;2;115;122;162m7d \u001b[0;38;2;158;206;106m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;0m \u001b[0;1;38;2;158;206;106m18%\u001b[0;38;2;84;92;126m │ \u001b[0;38;2;115;122;162mFable \u001b[0;38;2;158;206;106m▆\u001b[0;38;2;158;206;106m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;38;2;84;92;126m▆\u001b[0;0m \u001b[0;1;38;2;158;206;106m25%\u001b[0m"
+	},
+	{
+		"name": "light 256 plain glyphs at 80 columns: conflict, changes-requested PR, fast mode",
+		"columns": 80,
+		"env": {
+			"STATUSLINE_THEME": "light",
+			"STATUSLINE_GLYPHS": "plain"
+		},
+		"session": {
+			"session_id": "t",
+			"model": {
+				"id": "claude-sonnet-5-5",
+				"display_name": "Sonnet 5.5"
+			},
+			"workspace": {
+				"current_dir": "/home/you/src/my-app",
+				"project_dir": "/home/you/src/my-app",
+				"repo": {
+					"host": "github.com",
+					"owner": "octocat",
+					"name": "my-app"
+				}
+			},
+			"cwd": "/home/you/src/my-app",
+			"cost": {
+				"total_cost_usd": 12.5,
+				"total_duration_ms": 3723000
+			},
+			"context_window": {
+				"total_input_tokens": 580000,
+				"context_window_size": 1000000,
+				"used_percentage": 58
+			},
+			"exceeds_200k_tokens": true,
+			"effort": {
+				"level": "xhigh"
+			},
+			"rate_limits": {
+				"five_hour": {
+					"used_percentage": 72
+				},
+				"seven_day": {
+					"used_percentage": 83
+				}
+			},
+			"pr": {
+				"number": 77,
+				"url": "https://gitlab.com/g/p/-/merge_requests/77",
+				"review_state": "changes_requested",
+				"kind": "mr"
+			},
+			"fast_mode": true
+		},
+		"gitRaw": "# branch.oid ca8cb99\n# branch.head main\n# branch.upstream origin/main\n# branch.ab +0 -3\nu UU N... 100644 100644 100644 100644 a b c conflict.txt\n# diff.lines 0 0\n",
+		"usageRaw": "",
+		"expected": "\u001b[0;1;38;5;234;48;5;117m Sonnet 5.5 \u001b[0;0m \u001b[0;38;5;234;48;5;215m xhigh·fast \u001b[0;0m \u001b[0;38;5;234;48;5;111m my-app \u001b[0;0m \u001b[0;38;5;234;48;5;210m main ↓3 ✘1 \u001b[0;0m \u001b]8;;https://gitlab.com/g/p/-/merge_requests/77\u0007\u001b[0;38;5;234;48;5;210m !77 ✗ \u001b]8;;\u0007\u001b[0;0m  \u001b[0;38;5;60m$12.50\u001b[0;38;5;146m · \u001b[0;38;5;60m1h2m\u001b[0m\n\u001b[0;38;5;60mctx \u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;95m▆\u001b[0;38;5;94m▆\u001b[0;38;5;146m▆\u001b[0;38;5;146m▆\u001b[0;38;5;146m▆\u001b[0;38;5;146m▆\u001b[0;0m \u001b[0;1;38;5;95m58%\u001b[0;38;5;95m 580k\u001b[0;38;5;60m/1M\u001b[0;38;5;146m │ \u001b[0;38;5;60m5h \u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;95m▆\u001b[0;38;5;130m▆\u001b[0;38;5;130m▆\u001b[0;38;5;146m▆\u001b[0;38;5;146m▆\u001b[0;0m \u001b[0;1;38;5;130m72%\u001b[0;38;5;146m │ \u001b[0;38;5;60m7d \u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;65m▆\u001b[0;38;5;95m▆\u001b[0;38;5;130m▆\u001b[0;38;5;130m▆\u001b[0;38;5;197m▆\u001b[0;38;5;146m▆\u001b[0;0m \u001b[0;1;38;5;197m83%\u001b[0m"
+	},
+	{
+		"name": "narrow dark 256 at 52 columns: deep subdir, explicit worktree, detached HEAD, no PR",
+		"columns": 52,
+		"env": {
+			"STATUSLINE_THEME": "dark"
+		},
+		"session": {
+			"session_id": "t",
+			"model": {
+				"id": "claude-haiku-4-5",
+				"display_name": "Haiku 4.5"
+			},
+			"workspace": {
+				"current_dir": "/home/you/src/my-app/a/b/c/d",
+				"project_dir": "/home/you/src/my-app",
+				"git_worktree": "wt-feature",
+				"repo": {
+					"name": "my-app"
+				}
+			},
+			"cwd": "/home/you/src/my-app/a/b/c/d",
+			"cost": {
+				"total_cost_usd": 4.2137,
+				"total_duration_ms": 1380000,
+				"total_lines_added": 156,
+				"total_lines_removed": 23
+			},
+			"context_window": {
+				"total_input_tokens": 283000,
+				"context_window_size": 1000000,
+				"used_percentage": 28.3
+			},
+			"exceeds_200k_tokens": true,
+			"effort": {
+				"level": "medium"
+			},
+			"rate_limits": {
+				"five_hour": {
+					"used_percentage": 41
+				},
+				"seven_day": {
+					"used_percentage": 18
+				}
+			}
+		},
+		"gitRaw": "# branch.oid ca8cb9954662e18d96c1e10ff130d4249a0c8b6e\n# branch.head (detached)\n",
+		"usageRaw": "",
+		"expected": "\u001b[0;1;38;5;234;48;5;116m Haiku 4.5 \u001b[0;38;5;116;48;5;111m\u001b[0;38;5;234;48;5;111m my-app \u001b[0;38;5;111;48;5;149m\u001b[0;38;5;234;48;5;149m  ca8cb99 \u001b[0;38;5;149m\u001b[0m\n\u001b[0;38;5;103mctx \u001b[0;1;38;5;149m28%\u001b[0;38;5;179m 283k\u001b[0;38;5;103m/1M\u001b[0;38;5;60m │ \u001b[0;38;5;103m5h \u001b[0;1;38;5;149m41%\u001b[0;38;5;60m │ \u001b[0;38;5;103m7d \u001b[0;1;38;5;149m18%\u001b[0m"
+	}
+]

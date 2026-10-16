@@ -49,7 +49,33 @@ OpenCode's renderer emits cells, not ANSI; its scenarios are covered at the cell
 | demo renders every case | omp, claude, opencode | demo cases; `bun run demo` |
 
 Harness-specific scenarios (stdin contract, collectors, installers, git and cache I/O) are covered
-by the adapter and infrastructure suites.
+by the adapter and infrastructure suites below.
+
+## Claude Code (`test/harnesses/claude/`)
+
+`golden.test.ts` compares `main.ts` output byte for byte with what `statusline.sh` printed for three
+time-independent sessions (`test/fixtures/claude/golden.json`).
+
+| Original (`test_statusline.py`, `test_install.py`) | Covered by |
+|---|---|
+| full session two rows, never `null`, minimal input one row, empty input exit 0 | statusline › stdin contract |
+| model suffix stripped, Opus purple, effort max red, no effort chip, fast mode, arrows, thin separator, PR link, MR `!` | statusline › row 1 chips |
+| dir chip: repo name, subdir, deep elision, worktree name shown/not duplicated, linked worktrees, subdir relative to root | statusline › row 1 directory (real filesystem layouts) |
+| long branch 40/20, clean/dirty/conflicted git chip, detached HEAD, no git chip outside a repo | statusline › row 1 git chip |
+| session stats order, line counts ignore session edit counters, zero stats hidden | statusline › row 1 session stats |
+| line counts from the working tree diff | cache › line counts with real git |
+| ctx gauge ×4, 200k yellow, rate limits + reset, pace warning, no warning on pace, expired reset, missing ctx %, model-scoped weekly gauge, none without usage | statusline › row 2 gauges |
+| model-scoped gauge reads fresh cache, malformed usage skipped | cache › usage through the cache |
+| stale git cache renders immediately and refreshes in the background | cache › git through the cache; e2e › detached helper completes after the parent exits |
+| plain glyphs ×2, 256 colors, colors setting, light theme, unset theme | statusline › glyphs, colors and theme |
+| rows fit narrow terminals | statusline › width |
+| all 18 `subagent_*` tests, prints nothing without tasks | subagents (one test each) |
+| all 16 install tests | install.test.ts (same order) |
+| `missing_jq`, demo ×2, timing budgets ×2 | not ported: no jq; the demo is `bun run demo`; timing moves to the perf suite, and `cache` proves a stale entry never runs git on the render path |
+
+Claude-specific changes: a non-object stdin prints the hint line (it rendered a `$PWD` chip);
+`subagents = false` in the config turns the agent panel off; the cache is the shared JSON
+`FileCache` under `XDG_CACHE_HOME`; uninstall refuses a directory without our marker.
 
 ## Intentional behavior changes
 
