@@ -16,6 +16,7 @@ chips, colors and layout look the same everywhere.
 It replaces four separate projects (`claude-code-statusline`, `codex-statusline`, `omp-statusline`,
 `opencode-statusline`) with one TypeScript + Bun codebase and zero runtime npm dependencies.
 The installer takes over an old install for you; see [Migrating](#migrating-from-the-four-old-projects).
+The four old repositories were deleted on 2026-10-17 after the switch; this repository is their only home.
 
 ## The layout
 
@@ -124,7 +125,8 @@ Settings come from five layers; a later one wins:
 3. the config file: top-level keys, then the `[harness.<id>]` table of the harness that is drawing
    (`claude`, `codex`, `omp`, `opencode`)
 4. environment variables (`STATUSLINE_*`, `NO_COLOR`)
-5. flags: only `bun run demo` takes command-line flags
+5. command-line flags (no harness entry point takes any today; `bun run demo` has its own `--theme`,
+   `--glyphs` and `--colors` options and reads the environment, not the config file)
 
 The config file is `$XDG_CONFIG_HOME/oh-my-statusline/config.toml`, else
 `~/.config/oh-my-statusline/config.toml`. It is optional. An invalid or unknown value is skipped, the

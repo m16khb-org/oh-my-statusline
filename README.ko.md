@@ -15,6 +15,7 @@ AI 코딩 에이전트 네 가지에서 같은 모양으로 쓰는 2행 파워�
 `claude-code-statusline`, `codex-statusline`, `omp-statusline`, `opencode-statusline` 네 프로젝트를
 TypeScript + Bun 코드베이스 하나로 합쳤고, 런타임 npm 의존성은 없습니다. 기존 설치는 설치 스크립트가
 넘겨받습니다. 자세한 내용은 [기존 4개 프로젝트에서 옮기기](#기존-4개-프로젝트에서-옮기기)에 있습니다.
+기존 4개 저장소는 전환을 마친 뒤 2026-10-17에 삭제했고, 지금은 이 저장소만 남아 있습니다.
 
 ## 레이아웃
 
@@ -116,7 +117,7 @@ cd oh-my-statusline
 2. 설치 선택: `./install.sh`가 기록한 값(예: `--plain`)
 3. 설정 파일: 최상위 키, 그다음 지금 그리는 하네스의 `[harness.<id>]` 테이블(`claude`, `codex`, `omp`, `opencode`)
 4. 환경 변수(`STATUSLINE_*`, `NO_COLOR`)
-5. 플래그: 명령줄 플래그는 `bun run demo`만 받습니다
+5. 명령줄 플래그: 지금은 어떤 하네스 진입점도 플래그를 받지 않습니다. `bun run demo`는 자체 옵션(`--theme`, `--glyphs`, `--colors`)과 환경 변수만 읽고 설정 파일은 읽지 않습니다
 
 설정 파일은 `$XDG_CONFIG_HOME/oh-my-statusline/config.toml`이고, 변수가 없으면 `~/.config/oh-my-statusline/config.toml`입니다.
 파일은 없어도 됩니다. 잘못된 값은 그 항목만 건너뛰고 나머지는 그대로 적용하며, 파싱이 안 되는 파일은 통째로 무시합니다.
