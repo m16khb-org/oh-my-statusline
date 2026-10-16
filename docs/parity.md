@@ -130,7 +130,7 @@ entry candidates. `install.test.ts` imports that shim from a temp install and ge
 | fast refusal and `/fast` coming back | extension › fast mode and effort |
 | context read only on change | extension › context |
 | native status bar trimmed once per settings scope; `OMP_STATUSLINE_NATIVE=keep` | extension › omp's own status bar |
-| install default dir, `PI_CODING_AGENT_DIR`, `--plain`; foreign dir refused; uninstall | install.test |
+| install default dir, `PI_CODING_AGENT_DIR`, `--plain`; foreign dir refused; uninstall; unknown options rejected | install.test; test/cli/install.test.ts (argument parsing, unknown option → exit 2) |
 | `render.ts --demo` | demo.test; install.test › the installed runtime prints the omp demo |
 | Poller tests ×2 | test/application/poller.test.ts; extension-level usage throttle |
 | readGit / findGitRoot ×4 | test/infrastructure/git.test.ts; extension shows branch and changes from a real repo |

@@ -1,8 +1,8 @@
 # Feature matrix
 
 What each harness shows. `✓` means the harness has the data and the chip is drawn when the value
-exists; `–` means the harness has no such data, so the segment is left out (a value is never
-invented). The reason for each `–` follows the table.
+exists; `–` means the segment is left out for that harness, almost always because it has no such data
+(a value is never invented). The reason for each `–` follows the table.
 
 | Feature | Claude Code | Codex | omp | OpenCode |
 |---|:-:|:-:|:-:|:-:|
