@@ -19,7 +19,6 @@ import { defaultConfigPath, readConfigFile } from "../../infrastructure/config-f
 import { buildEnvChips, EnvAdapter, K8S_TTL_MS, TMUX_TTL_MS, tmuxTarget } from "../../infrastructure/env-chips.ts";
 import { findGitRoot, GitAdapter } from "../../infrastructure/git.ts";
 import { PrAdapter } from "../../infrastructure/pr.ts";
-import { readTodayCost } from "../../infrastructure/stats/today.ts";
 import { ClaudeUsageAdapter } from "../../infrastructure/usage.ts";
 import { asObject, type Json, sessionCwd, toClaudeSnapshot, wholeNumber } from "./snapshot.ts";
 import { subagentRows } from "./subagents.ts";
@@ -54,7 +53,7 @@ export interface ClaudeDeps {
 	/** gh/glab pull request, for sessions whose JSON names none. */
 	pr?: PrPort;
 	/** Today's cost across all harnesses (reads session files; only ever called by the refresh helper). */
-	todayCost?: () => number | null;
+	todayCost?: () => number | null | Promise<number | null>;
 }
 
 const gitKey = (cwd: string) => `claude-git:${cwd}`;
@@ -250,7 +249,8 @@ export function defaultDeps(env: Record<string, string | undefined>, cwd: string
 		refreshInBackground: spawnRefresh,
 		chips: new EnvAdapter(),
 		pr: new PrAdapter(),
-		todayCost: () => readTodayCost({ env, nowMs: Date.now() }),
+		// Loaded on demand: the collector (bun:sqlite, every parser) is only needed by the refresh helper.
+		todayCost: async () => (await import("../../infrastructure/stats/today.ts")).readTodayCost({ env, nowMs: Date.now() }),
 	};
 }
 

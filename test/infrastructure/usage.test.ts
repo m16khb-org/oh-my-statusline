@@ -43,9 +43,9 @@ test("falls back to the keychain command", async () => {
 	expect(await adapter.read()).toHaveLength(1);
 });
 
-test("no token, HTTP error and bad JSON give null", async () => {
+test("no token means no windows; HTTP error and bad JSON give null (keep what was cached)", async () => {
 	const base = { clock: { now: () => NOW }, readFile: () => creds, exec: async () => null };
-	expect(await new ClaudeUsageAdapter({ ...base, readFile: () => null, fetch: ok(body) }).read()).toBeNull();
+	expect(await new ClaudeUsageAdapter({ ...base, readFile: () => null, fetch: ok(body) }).read()).toEqual([]);
 	expect(await new ClaudeUsageAdapter({ ...base, fetch: ok(body, 500) }).read()).toBeNull();
 	expect(await new ClaudeUsageAdapter({ ...base, fetch: async () => new Response("not json") }).read()).toBeNull();
 	expect(

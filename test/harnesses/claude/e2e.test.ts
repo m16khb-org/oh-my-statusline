@@ -81,10 +81,10 @@ describe("main.ts as a process", () => {
 		expect(existsSync(lock)).toBe(false);
 	});
 
-	test("--refresh usage without credentials exits 0 and writes nothing", async () => {
+	test("--refresh usage without credentials exits 0 and caches 'no windows', so renders stop asking", async () => {
 		const env = isolatedEnv();
 		const { code, out } = await run(["--refresh", "usage"], "", env);
 		expect([code, out]).toEqual([0, ""]);
-		expect(new FileCache(path.join(env.XDG_CACHE_HOME!, "oh-my-statusline"), { now: Date.now }).read("claude-usage")).toBeNull();
+		expect(new FileCache(path.join(env.XDG_CACHE_HOME!, "oh-my-statusline"), { now: Date.now }).read("claude-usage")?.value).toEqual([]);
 	});
 });

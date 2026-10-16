@@ -47,14 +47,20 @@ export function rowWidth(cells: readonly Cell[], measure: Measure): number {
 	return width;
 }
 
-const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+let segmenter: Intl.Segmenter | undefined;
+
+/** Graphemes of `text`. The segmenter is built on first use: constructing one loads ICU data (~1 ms), which most renders never need. */
+export function graphemes(text: string): Intl.Segments {
+	segmenter ??= new Intl.Segmenter(undefined, { granularity: "grapheme" });
+	return segmenter.segment(text);
+}
 
 /** Cut to `limit` cells, ending in `ellipsis` when it does not fit. Never splits a grapheme. */
 export function clip(text: string, limit: number, measure: Measure, ellipsis = "…"): string {
 	if (measure(text) <= limit) return text;
 	let out = "";
 	let width = 0;
-	for (const { segment } of graphemes.segment(text)) {
+	for (const { segment } of graphemes(text)) {
 		const next = measure(segment);
 		if (width + next > limit - measure(ellipsis)) break;
 		out += segment;

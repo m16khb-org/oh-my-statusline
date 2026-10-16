@@ -81,7 +81,9 @@ export class ClaudeUsageAdapter implements UsagePort {
 
 	async read(): Promise<LimitWindow[] | null> {
 		const token = await this.token();
-		if (!token) return null;
+		// No credentials is a known answer (no windows), cached like one, so a machine without a Claude
+		// login does not start a refresh helper on every render. A failed fetch stays null: keep the old.
+		if (!token) return [];
 		try {
 			const res = await this.fetchFn(USAGE_URL, {
 				headers: { Authorization: `Bearer ${token}`, "anthropic-beta": "oauth-2025-04-20" },

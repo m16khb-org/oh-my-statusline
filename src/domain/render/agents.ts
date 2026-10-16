@@ -7,7 +7,7 @@
 // the last level does not fit, no rows are returned and the harness keeps its default rows.
 
 import type { RunningAgent } from "../model/snapshot.ts";
-import { type Cell, clip, countCodePoints, type Measure, type RenderContext, rowWidth } from "./cells.ts";
+import { type Cell, clip, countCodePoints, graphemes, type Measure, type RenderContext, rowWidth } from "./cells.ts";
 import { formatDuration, formatTokens } from "./format.ts";
 import { CHIP_FG, effortColors, glyphSet, INK, modelColor } from "./palette.ts";
 import { RowBuilder } from "./statusline.ts";
@@ -38,7 +38,6 @@ const ESCAPE_SEQUENCE = /\u001b\[[0-?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u
 // run. ZWNJ/ZWJ (U+200C/200D) stay: emoji sequences and several scripts need them.
 const INVISIBLE_OR_SPACE = /[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\s]+/g;
 const LABEL_LIMIT = 200;
-const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /** One line of at most 200 graphemes: escape sequences and invisible characters collapse to one space, ends trimmed. */
 function oneLine(text: string): string {
@@ -46,7 +45,7 @@ function oneLine(text: string): string {
 	if (line.length <= LABEL_LIMIT) return line;
 	let kept = 0;
 	let end = 0;
-	for (const { segment } of graphemes.segment(line)) {
+	for (const { segment } of graphemes(line)) {
 		if (kept === LABEL_LIMIT) break;
 		kept++;
 		end += segment.length;
