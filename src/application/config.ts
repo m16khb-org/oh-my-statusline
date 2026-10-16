@@ -8,7 +8,7 @@ import type { ColorMode, GlyphMode } from "../domain/render/cells.ts";
 export interface Config {
 	theme: "auto" | "dark" | "light";
 	glyphs: GlyphMode;
-	colors: "auto" | "truecolor" | "256";
+	colors: "auto" | "truecolor" | "256" | "none";
 	chips: { ssh: boolean; tmux: boolean; venv: boolean; k8s: boolean };
 	stats: { chip: boolean };
 	subagents: boolean;
@@ -45,8 +45,8 @@ export const DEFAULT_CONFIG: Config = {
 
 const CHOICES: Record<"theme" | "glyphs" | "colors", readonly string[]> = {
 	theme: ["auto", "dark", "light"],
-	glyphs: ["powerline", "plain"],
-	colors: ["auto", "truecolor", "24bit", "256"],
+	glyphs: ["powerline", "plain", "ascii"],
+	colors: ["auto", "truecolor", "24bit", "256", "none"],
 };
 
 const ENV_NAMES: Record<string, string> = {
@@ -144,8 +144,13 @@ export function resolveConfig(input: ResolveInput): { config: Config; warnings: 
 	return { config, warnings };
 }
 
-/** The ANSI depth to draw with: an explicit choice, else what COLORTERM advertises. */
+/**
+ * The ANSI depth to draw with: 0 (no SGR at all) when NO_COLOR is set and non-empty, which wins
+ * over everything (https://no-color.org) or when colors = "none"; else an explicit choice, else
+ * what COLORTERM advertises.
+ */
 export function colorDepth(config: Config, env: Record<string, string | undefined>): ColorMode {
+	if (env.NO_COLOR || config.colors === "none") return 0;
 	if (config.colors === "truecolor") return 24;
 	if (config.colors === "256") return 256;
 	return env.COLORTERM === "truecolor" || env.COLORTERM === "24bit" ? 24 : 256;

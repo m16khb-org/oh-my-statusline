@@ -2,7 +2,7 @@
 // text reads on all of them); ink colors are for text drawn on the terminal's own background.
 
 import type { Rgb } from "../model/values.ts";
-import type { GlyphMode, ThemeName } from "./cells.ts";
+import type { ColorMode, GlyphMode, ThemeName } from "./cells.ts";
 
 export const CHIP_FG: Rgb = [26, 27, 38];
 export const CHIP_FG_LIGHT: Rgb = [192, 202, 245];
@@ -57,13 +57,86 @@ export interface Glyphs {
 	branch: string;
 	up: string;
 	down: string;
+	/** Between gauges. */
+	gaugeSep: string;
+	/** Between session stats. */
+	statSep: string;
+	/** Joins a worktree name to its directory, and "fast" to the effort. */
+	dot: string;
+	/** Bar cell: filled, and the empty track. Colored modes tell them apart by color alone. */
+	barFill: string;
+	barTrack: string;
+	ellipsis: string;
+	/** Time-to-limit warning, reset countdown, conflicts / failed, approved, changes requested. */
+	warn: string;
+	reset: string;
+	fail: string;
+	ok: string;
+	rejected: string;
+	subagents: string;
+	shells: string;
+	minus: string;
+	/** A known window without a reading. */
+	none: string;
 }
 
 // Powerline glyphs live in the private use area; escapes keep editors from stripping them.
+const UNICODE = {
+	gaugeSep: " │ ",
+	statSep: " · ",
+	dot: "·",
+	barFill: "▆",
+	barTrack: "▆",
+	ellipsis: "…",
+	warn: "⚠",
+	reset: "↻",
+	fail: "✘",
+	ok: "✓",
+	rejected: "✗",
+	subagents: "◈",
+	shells: "⌘",
+	minus: "−",
+	none: "—",
+} as const;
+
 export const GLYPHS: Record<GlyphMode, Glyphs> = {
-	powerline: { arrow: "\ue0b0", thin: "\ue0b1", branch: "\ue0a0", up: "⇡", down: "⇣" },
-	plain: { arrow: "", thin: "", branch: "", up: "↑", down: "↓" },
+	powerline: { arrow: "\ue0b0", thin: "\ue0b1", branch: "\ue0a0", up: "⇡", down: "⇣", ...UNICODE },
+	plain: { arrow: "", thin: "", branch: "", up: "↑", down: "↓", ...UNICODE },
+	// 7-bit only: nothing here may need a UTF-8 locale or a special font.
+	ascii: {
+		arrow: "",
+		thin: "",
+		branch: "",
+		up: "^",
+		down: "v",
+		gaugeSep: " | ",
+		statSep: " - ",
+		dot: ":",
+		barFill: "#",
+		barTrack: "-",
+		ellipsis: "...",
+		warn: "!",
+		reset: "@",
+		fail: "x",
+		ok: "ok",
+		rejected: "x",
+		subagents: "ag",
+		shells: "sh",
+		minus: "-",
+		none: "-",
+	},
 };
+
+/**
+ * The glyphs a render actually draws with. Without color, powerline arrows and chip backgrounds
+ * carry no meaning, so powerline falls back to plain; and a bar whose fill and track differ only
+ * by color becomes unreadable, so the track gets its own low block (▁ under ▆, both fill the cell).
+ */
+export function glyphSet(mode: GlyphMode, colors: ColorMode): Glyphs {
+	if (colors !== 0) return GLYPHS[mode];
+	const base = GLYPHS[mode === "powerline" ? "plain" : mode];
+	return base.barFill === base.barTrack ? { ...base, barTrack: "▁" } : base;
+}
 
 // First match wins. Claude families and OpenAI (GPT/Astra/o-series) keep the colors claude-, codex-
 // and omp-statusline used; the rest extend the palette to the providers OpenCode serves.
@@ -72,7 +145,8 @@ const MODEL_FAMILIES: ReadonlyArray<readonly [RegExp, Rgb]> = [
 	[/sonnet/i, CHIP.cyan],
 	[/haiku/i, CHIP.teal],
 	[/fable/i, CHIP.orange],
-	[/gpt|astra|codex|^o[1-9]/i, CHIP.purple],
+	// A bare "Codex" (no model reported yet) stays silver, as codex-statusline drew it.
+	[/gpt|astra|^o[1-9]/i, CHIP.purple],
 	[/gemini/i, CHIP.blue],
 	[/deepseek/i, CHIP.purple],
 	[/kimi|moonshot/i, CHIP.cyan],

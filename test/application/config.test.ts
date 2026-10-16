@@ -105,4 +105,20 @@ describe("colorDepth", () => {
 		expect(colorDepth(auto, { COLORTERM: "yes" })).toBe(256);
 		expect(colorDepth(auto, {})).toBe(256);
 	});
+	test("colors = none draws no color", () => {
+		expect(colorDepth({ ...auto, colors: "none" }, { COLORTERM: "truecolor" })).toBe(0);
+		expect(resolveConfig({ harness: "omp", file: null, env: { STATUSLINE_COLORS: "none" }, flags: {} }).config.colors).toBe("none");
+	});
+	test("a non-empty NO_COLOR wins over every color setting", () => {
+		expect(colorDepth(auto, { NO_COLOR: "1", COLORTERM: "truecolor" })).toBe(0);
+		expect(colorDepth({ ...auto, colors: "truecolor" }, { NO_COLOR: "1" })).toBe(0);
+		expect(colorDepth({ ...auto, colors: "256" }, { NO_COLOR: "yes" })).toBe(0);
+	});
+	test("an empty NO_COLOR is ignored", () => {
+		expect(colorDepth({ ...auto, colors: "truecolor" }, { NO_COLOR: "" })).toBe(24);
+	});
+	test("glyphs = ascii is accepted from every layer", () => {
+		expect(resolveConfig({ harness: "omp", file: null, env: { STATUSLINE_GLYPHS: "ascii" }, flags: {} }).config.glyphs).toBe("ascii");
+		expect(resolveConfig({ harness: "omp", file: { raw: { glyphs: "ascii" } }, env: {}, flags: {} }).config.glyphs).toBe("ascii");
+	});
 });

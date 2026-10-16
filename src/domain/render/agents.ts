@@ -9,7 +9,7 @@
 import type { RunningAgent } from "../model/snapshot.ts";
 import { type Cell, clip, countCodePoints, type Measure, type RenderContext, rowWidth } from "./cells.ts";
 import { formatDuration, formatTokens } from "./format.ts";
-import { CHIP_FG, effortColors, GLYPHS, INK, modelColor } from "./palette.ts";
+import { CHIP_FG, effortColors, glyphSet, INK, modelColor } from "./palette.ts";
 import { RowBuilder } from "./statusline.ts";
 
 export interface AgentRow {
@@ -58,7 +58,7 @@ interface Prepared {
 /** Chips and the right-hand gauge/status at one level; each level drops more. */
 function parts(a: Prepared, lvl: number, ctx: RenderContext, measure: Measure): Parts {
 	const ink = INK[ctx.theme];
-	const g = GLYPHS[ctx.glyphs];
+	const g = glyphSet(ctx.glyphs, ctx.colors);
 	const left = new RowBuilder(ink, g);
 	left.chip(modelColor(a.model), CHIP_FG, a.model, { bold: true });
 	if (lvl < 4 && a.agent.effort) {
@@ -81,20 +81,20 @@ function parts(a: Prepared, lvl: number, ctx: RenderContext, measure: Measure): 
 		let mark = "";
 		let color = ink.dim;
 		let bold = false;
-		if (status === "completed") [mark, color, bold] = ["✓", ink.green, true];
-		else if (status === "failed") [mark, color, bold] = ["✘", ink.red, true];
-		else if (status === "killed") mark = "✘";
+		if (status === "completed") [mark, color, bold] = [g.ok, ink.green, true];
+		else if (status === "failed") [mark, color, bold] = [g.fail, ink.red, true];
+		else if (status === "killed") mark = g.fail;
 		else if (status === "paused") mark = "paused";
 		else if (a.ageS >= 0) mark = a.ageS < 60 ? `${a.ageS}s` : formatDuration(a.ageS);
 		if (mark) {
-			if (right.cells.length > 0) right.put(" · ", ink.faint);
+			if (right.cells.length > 0) right.put(g.statSep, ink.faint);
 			right.put(mark, color, bold);
 		}
 	}
 	return { chips: left.cells, chipsW: rowWidth(left.cells, measure), right: right.cells, rightW: rowWidth(right.cells, measure) };
 }
 
-/** Width of chips plus name, and of the separator before the label (" · " after a name, else " "). */
+/** Width of chips plus name, and of the separator before the label (the stat separator, 3 cells, after a name, else " "). */
 function leftWidth(a: Prepared, p: Parts): { leftW: number; sepW: number } {
 	return a.name ? { leftW: p.chipsW + 1 + a.nameW, sepW: 3 } : { leftW: p.chipsW, sepW: 1 };
 }
@@ -103,6 +103,7 @@ export function renderAgentRows(agents: readonly RunningAgent[], ctx: RenderCont
 	if (agents.length === 0) return [];
 	const measure = ctx.measure ?? countCodePoints;
 	const ink = INK[ctx.theme];
+	const g = glyphSet(ctx.glyphs, ctx.colors);
 	const cols = ctx.width;
 	const prepared: Prepared[] = agents.map((agent) => {
 		const name = oneLine(agent.name);
@@ -150,8 +151,8 @@ export function renderAgentRows(agents: readonly RunningAgent[], ctx: RenderCont
 		const start = Math.max(col, width + 2);
 		const budget = start - 2 - width - sepW;
 		if (a.labelW > 0 && (budget >= a.labelW || budget >= 4)) {
-			cells.push(sepW === 3 ? { text: " · ", fg: ink.faint } : { text: " " });
-			const label = clip(a.label, budget, measure);
+			cells.push(sepW === 3 ? { text: g.statSep, fg: ink.faint } : { text: " " });
+			const label = clip(a.label, budget, measure, g.ellipsis);
 			cells.push({ text: label, fg: ink.dim });
 			width += sepW + measure(label);
 		}

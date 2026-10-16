@@ -13,7 +13,7 @@ import type { StatusSnapshot } from "../model/snapshot.ts";
 import type { Rgb } from "../model/values.ts";
 import { type Cell, clip, countCodePoints, emit, type Measure, type RenderContext, rowWidth } from "./cells.ts";
 import { etaLimit, formatCost, formatDuration, formatTokens } from "./format.ts";
-import { CHIP, CHIP_FG, CHIP_FG_LIGHT, effortColors, GLYPHS, type Glyphs, gradient, INK, type Ink, levelColor, modelColor } from "./palette.ts";
+import { CHIP, CHIP_FG, CHIP_FG_LIGHT, effortColors, type Glyphs, glyphSet, gradient, INK, type Ink, levelColor, modelColor } from "./palette.ts";
 
 const DEFAULT_MINIMUM_WIDTH = 20;
 
@@ -60,7 +60,7 @@ export class RowBuilder {
 	/** Two spaces after the chips, " · " between session stats. */
 	statGap(): void {
 		if (this.#stats === 0) this.put("  ");
-		else this.put(" · ", this.ink.faint);
+		else this.put(this.glyphs.statSep, this.ink.faint);
 		this.#stats++;
 	}
 
@@ -70,7 +70,7 @@ export class RowBuilder {
 		const fill = Math.min(cells, Math.trunc((tenths * cells + 500) / 1000));
 		for (let i = 0; i < cells; i++) {
 			// ▆ is a block element, which terminals draw to fill the cell; ▰▱ render small in many fonts.
-			this.put("▆", i < fill ? gradient(this.ink, Math.trunc(((2 * i + 1) * 1000) / (2 * cells))) : this.ink.faint);
+			this.put(i < fill ? this.glyphs.barFill : this.glyphs.barTrack, i < fill ? gradient(this.ink, Math.trunc(((2 * i + 1) * 1000) / (2 * cells))) : this.ink.faint);
 		}
 		this.put(" ");
 	}
@@ -83,20 +83,20 @@ export class RowBuilder {
 		limit?: { resetsAtS: number; windowS: number; nowS: number; showReset: boolean },
 	): void {
 		const whole = Math.trunc((tenths + 5) / 10);
-		if (this.cells.length > 0) this.put(" │ ", this.ink.faint);
+		if (this.cells.length > 0) this.put(this.glyphs.gaugeSep, this.ink.faint);
 		this.put(`${label} `, this.ink.dim);
 		this.bar(tenths, cells);
 		this.put(`${whole}%`, levelColor(this.ink, whole), true);
 		if (!limit) return;
 		const eta = etaLimit(tenths, limit.resetsAtS, limit.windowS, limit.nowS);
-		if (eta === 0) this.put(" ⚠", this.ink.red, true);
-		else if (eta !== undefined) this.put(` ⚠~${formatDuration(eta)}`, this.ink.red, true);
-		if (limit.showReset && limit.resetsAtS > limit.nowS) this.put(` ↻${formatDuration(limit.resetsAtS - limit.nowS)}`, this.ink.dim);
+		if (eta === 0) this.put(` ${this.glyphs.warn}`, this.ink.red, true);
+		else if (eta !== undefined) this.put(` ${this.glyphs.warn}~${formatDuration(eta)}`, this.ink.red, true);
+		if (limit.showReset && limit.resetsAtS > limit.nowS) this.put(` ${this.glyphs.reset}${formatDuration(limit.resetsAtS - limit.nowS)}`, this.ink.dim);
 	}
 
 	/** A known window without a reading: `label —` in dim ink. */
 	placeholder(label: string): void {
-		this.put(`${this.cells.length > 0 ? " │ " : ""}${label} —`, this.ink.dim);
+		this.put(`${this.cells.length > 0 ? this.glyphs.gaugeSep : ""}${label} ${this.glyphs.none}`, this.ink.dim);
 	}
 }
 
@@ -119,7 +119,7 @@ function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
 	if (git) {
 		if (git.ahead > 0) gitCounts += ` ${g.up}${git.ahead}`;
 		if (git.behind > 0) gitCounts += ` ${g.down}${git.behind}`;
-		if (git.conflicts > 0) gitCounts += ` ✘${git.conflicts}`;
+		if (git.conflicts > 0) gitCounts += ` ${g.fail}${git.conflicts}`;
 		if (git.staged > 0) gitCounts += ` +${git.staged}`;
 		if (git.modified > 0) gitCounts += ` ~${git.modified}`;
 		if (git.untracked > 0) gitCounts += ` ?${git.untracked}`;
@@ -132,9 +132,9 @@ function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
 	// linked worktree's name when it differs from both the branch and the repository.
 	const { name, relative, worktree } = s.dir;
 	const parts = relative.split("/");
-	const rel = parts.length >= 3 ? `…/${parts[parts.length - 2]}/${parts[parts.length - 1]}` : relative;
+	const rel = parts.length >= 3 ? `${g.ellipsis}/${parts[parts.length - 2]}/${parts[parts.length - 1]}` : relative;
 	let dirFull = rel ? `${name}/${rel}` : name;
-	if (worktree && worktree !== branch && worktree !== name) dirFull += `·${worktree}`;
+	if (worktree && worktree !== branch && worktree !== name) dirFull += `${g.dot}${worktree}`;
 
 	let pr: Prepared["pr"] = null;
 	if (s.pr) {
@@ -142,10 +142,10 @@ function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
 		const url = s.pr.url;
 		switch (s.pr.state) {
 			case "approved":
-				pr = { text: `${text} ✓`, bg: CHIP.teal, fg: CHIP_FG, url };
+				pr = { text: `${text} ${g.ok}`, bg: CHIP.teal, fg: CHIP_FG, url };
 				break;
 			case "changes_requested":
-				pr = { text: `${text} ✗`, bg: CHIP.red, fg: CHIP_FG, url };
+				pr = { text: `${text} ${g.rejected}`, bg: CHIP.red, fg: CHIP_FG, url };
 				break;
 			case "draft":
 				pr = { text: `${text} draft`, bg: CHIP.slate, fg: CHIP_FG_LIGHT, url };
@@ -156,11 +156,11 @@ function prepare(s: StatusSnapshot, g: Glyphs): Prepared {
 	}
 
 	const counts: string[] = [];
-	if (s.counts && s.counts.subagents > 0) counts.push(`◈ ${s.counts.subagents}`);
-	if (s.counts && s.counts.shells > 0) counts.push(`⌘ ${s.counts.shells}`);
+	if (s.counts && s.counts.subagents > 0) counts.push(`${g.subagents} ${s.counts.subagents}`);
+	if (s.counts && s.counts.shells > 0) counts.push(`${g.shells} ${s.counts.shells}`);
 
 	let effortText = s.effort;
-	if (s.model.isFast) effortText = effortText ? `${effortText}·fast` : "fast";
+	if (s.model.isFast) effortText = effortText ? `${effortText}${g.dot}fast` : "fast";
 
 	return { effortText, effort: effortColors(s.effort), dirFull, branch, gitBg, gitCounts, pr, counts: counts.join(" ") };
 }
@@ -175,7 +175,7 @@ function buildRow1(s: StatusSnapshot, p: Prepared, lvl: number, ink: Ink, g: Gly
 		else if (lvl < 8) row.chip(CHIP.blue, CHIP_FG, s.dir.name);
 	}
 	if (s.git) {
-		const branch = clip(p.branch, lvl >= 7 ? 20 : 40, measure);
+		const branch = clip(p.branch, lvl >= 7 ? 20 : 40, measure, g.ellipsis);
 		row.chip(p.gitBg, CHIP_FG, `${g.branch ? `${g.branch} ` : ""}${branch}${p.gitCounts}`);
 	}
 	if (lvl < 5 && p.pr) row.chip(p.pr.bg, p.pr.fg, p.pr.text, { url: p.pr.url });
@@ -195,7 +195,7 @@ function buildRow1(s: StatusSnapshot, p: Prepared, lvl: number, ink: Ink, g: Gly
 		row.statGap();
 		if (add > 0) row.put(`+${add}`, ink.green);
 		if (add > 0 && del > 0) row.put(" ");
-		if (del > 0) row.put(`−${del}`, ink.red);
+		if (del > 0) row.put(`${g.minus}${del}`, ink.red);
 	}
 	if (lvl < 1 && s.cache) {
 		if (s.cache.hitPct !== null) {
@@ -261,7 +261,7 @@ export function renderCells(s: StatusSnapshot, ctx: RenderContext): Cell[][] {
 	if (ctx.width < (ctx.minimumWidth ?? DEFAULT_MINIMUM_WIDTH)) return [];
 	const measure = ctx.measure ?? countCodePoints;
 	const ink = INK[ctx.theme];
-	const g = GLYPHS[ctx.glyphs];
+	const g = glyphSet(ctx.glyphs, ctx.colors);
 	const p = prepare(s, g);
 
 	let row1 = buildRow1(s, p, 0, ink, g, measure);

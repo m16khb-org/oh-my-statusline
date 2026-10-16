@@ -1,0 +1,59 @@
+{
+ "claude": {
+  "12": [],
+  "20": [
+   " Opus 5.5   main "
+  ],
+  "60": [
+   " Opus 5.5   max   my-app   main  \u001b]8;;https://github.com/octocat/my-app/pull/512\u0007 #512 ✓ \u001b]8;;\u0007  $4.21 · 23m",
+   "ctx 28% │ 5h 41% ↻1h12m │ 7d 18% ↻3d5h │ Fable 25% ↻3d5h"
+  ],
+  "120": [
+   " Opus 5.5   max   my-app   main  \u001b]8;;https://github.com/octocat/my-app/pull/512\u0007 #512 ✓ \u001b]8;;\u0007  $4.21 · 23m · cache 42m",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 28% 283k/1M │ 5h ▆▆▆▁▁▁▁▁ 41% ↻1h12m │ 7d ▆▁▁▁▁▁▁▁ 18% ↻3d5h │ Fable ▆▆▁▁▁▁▁▁ 25% ↻3d5h"
+  ]
+ },
+ "codex": {
+  "12": [],
+  "20": [
+   " GPT-6 Astra   main ↑2 +1 ~2 ?1 "
+  ],
+  "60": [
+   " GPT-6 Astra   max   my-app   main ↑2 +1 ~2 ?1   23m",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 28% 78k/243k │ 5h ▆▆▆▁▁▁▁▁ 41% ↻1h12m │ 7d —"
+  ],
+  "120": [
+   " GPT-6 Astra   max   my-app   main ↑2 +1 ~2 ?1   23m · +156 −23 · cache hit 96%",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 28% 78k/243k │ 5h ▆▆▆▁▁▁▁▁ 41% ↻1h12m │ 7d —"
+  ]
+ },
+ "omp": {
+  "12": [],
+  "20": [
+   " GPT-5.5   ca8cb99 ↓3 ✘1 "
+  ],
+  "60": [
+   " GPT-5.5   my-app/…/src/render·fix-ladder   ca8cb99 ↓3 ✘1 ",
+   "ctx 31% │ 5h 72% ⚠~1h10m │ 7d 44% ⚠~3d18h │ Fable·5h 12%"
+  ],
+  "120": [
+   " GPT-5.5   high·fast   my-app/…/src/render·fix-ladder   ca8cb99 ↓3 ✘1  \u001b]8;;https://gitlab.com/octocat/my-app/-/merge_requests/77\u0007 !77 draft \u001b]8;;\u0007  cache hit 87%",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 31% 84k/272k │ 5h ▆▆▆▆▆▆▁▁ 72% ⚠~1h10m ↻2h │ 7d ▆▆▆▆▁▁▁▁ 44% ⚠~3d18h ↻4d1h │ Fable·5h ▆▁▁▁▁▁▁▁ 12% ↻2h"
+  ]
+ },
+ "opencode": {
+  "12": [],
+  "20": [
+   " Opus 5.5   feature/statusline ↑2 +1 ~3 ?1   ◈ 2 ⌘ 1 ",
+   "ctx 28% 283k/1M"
+  ],
+  "60": [
+   " Opus 5.5   feature/statusline ↑2 +1 ~3 ?1   ◈ 2 ⌘ 1 ",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 28% 283k/1M"
+  ],
+  "120": [
+   " Opus 5.5   max   my-app/…/lib/statusline   feature/statusline ↑2 +1 ~3 ?1   ◈ 2 ⌘ 1   $4.21 · 23m · +156 −23",
+   "ctx ▆▆▆▁▁▁▁▁▁▁ 28% 283k/1M"
+  ]
+ }
+}

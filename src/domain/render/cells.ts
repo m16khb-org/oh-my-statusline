@@ -5,8 +5,9 @@
 import type { Rgb } from "../model/values.ts";
 
 export type ThemeName = "dark" | "light";
-export type GlyphMode = "powerline" | "plain";
-export type ColorMode = 24 | 256;
+export type GlyphMode = "powerline" | "plain" | "ascii";
+/** ANSI color depth; 0 draws no SGR at all (NO_COLOR). */
+export type ColorMode = 24 | 256 | 0;
 
 export interface Cell {
 	text: string;
@@ -48,18 +49,18 @@ export function rowWidth(cells: readonly Cell[], measure: Measure): number {
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-/** Cut to `limit` cells, ending in an ellipsis when it does not fit. Never splits a grapheme. */
-export function clip(text: string, limit: number, measure: Measure): string {
+/** Cut to `limit` cells, ending in `ellipsis` when it does not fit. Never splits a grapheme. */
+export function clip(text: string, limit: number, measure: Measure, ellipsis = "…"): string {
 	if (measure(text) <= limit) return text;
 	let out = "";
 	let width = 0;
 	for (const { segment } of graphemes.segment(text)) {
 		const next = measure(segment);
-		if (width + next > limit - 1) break;
+		if (width + next > limit - measure(ellipsis)) break;
 		out += segment;
 		width += next;
 	}
-	return `${out}…`;
+	return `${out}${ellipsis}`;
 }
 
 /** Nearest xterm-256 color: the 6x6x6 cube, or the gray ramp for near-grays. */
@@ -82,11 +83,16 @@ function sgrColor(layer: 38 | 48, color: Rgb, mode: ColorMode): string {
 
 /**
  * ANSI for one row: every run resets first (`ESC[0;…m`), so no style leaks from the previous
- * run; links wrap their run in OSC 8; a non-empty row ends with a reset.
+ * run; links wrap their run in OSC 8; a non-empty row ends with a reset. Mode 0 emits no SGR
+ * (styles are dropped, links kept).
  */
 export function emit(cells: readonly Cell[], mode: ColorMode): string {
 	let out = "";
 	for (const cell of cells) {
+		if (mode === 0) {
+			out += cell.url ? `\x1b]8;;${cell.url}\x07${cell.text}\x1b]8;;\x07` : cell.text;
+			continue;
+		}
 		const params: string[] = [];
 		if (cell.bold) params.push("1");
 		if (cell.fg) params.push(sgrColor(38, cell.fg, mode));
@@ -94,5 +100,5 @@ export function emit(cells: readonly Cell[], mode: ColorMode): string {
 		const run = `\x1b[0;${params.length ? params.join(";") : "0"}m${cell.text}`;
 		out += cell.url ? `\x1b]8;;${cell.url}\x07${run}\x1b]8;;\x07` : run;
 	}
-	return out ? `${out}\x1b[0m` : "";
+	return out && mode !== 0 ? `${out}\x1b[0m` : out;
 }
