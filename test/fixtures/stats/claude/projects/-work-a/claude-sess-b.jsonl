@@ -1,0 +1,1 @@
+{"type":"assistant","timestamp":"2026-10-16T05:00:00.000Z","sessionId":"claude-sess-b","requestId":"req_b1","message":{"id":"msg_b1","model":"claude-sonnet-test","role":"assistant","content":[{"type":"text","text":"redacted"}],"usage":{"input_tokens":100,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":200,"service_tier":"standard"}}}
