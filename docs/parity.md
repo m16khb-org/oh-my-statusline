@@ -77,6 +77,40 @@ Claude-specific changes: a non-object stdin prints the hint line (it rendered a 
 `subagents = false` in the config turns the agent panel off; the cache is the shared JSON
 `FileCache` under `XDG_CACHE_HOME`; uninstall refuses a directory without our marker.
 
+## Codex (`test/harnesses/codex/`)
+
+`golden.test.ts` renders three rollout-derived payloads (full 140 columns, narrow 70, empty) and
+compares them byte for byte with what `renderer.sh` printed for the same `payload_for` output
+(`test/fixtures/codex/golden-rows.json`).
+
+| Original (`test_statusline.py`, `test_install.py`, `test_lifecycle.py`) | Covered by |
+|---|---|
+| weekly primary not mislabelled as 5h | statusline › a weekly primary window is labelled 7d, never 5h |
+| rate-limit refresh does not erase token usage | statusline › a rate-limit refresh with info null keeps the token usage |
+| partial JSON line read once when completed | statusline › a partial line is read once, when it is completed |
+| renderer keeps two rows with unavailable metrics | statusline › two rows survive unavailable metrics; golden › empty |
+| cache hit uses the last request input | statusline › the hit rate uses the last request, not the session total |
+| zero cache hits are visible | statusline › a zero hit rate is known and shown |
+| working changes count staged and unstaged lines | statusline › counts staged and unstaged lines against HEAD |
+| model change without another turn updates status | statusline › a model change without another turn updates the status |
+| thread lookup rejects an ambiguous prefix | statusline › an ambiguous or unknown prefix selects nothing |
+| ANSI styles and literal tmux metacharacters | statusline › SGR becomes tmux styles and tmux metacharacters stay literal |
+| commands and option values are not prompts | statusline › subcommands, help and option values are not prompts |
+| foreign or empty title never selects a session | statusline › only a thread id, or its 32-cell cut, selects a session |
+| installs and forwards quoted arguments | install › installs the wrapper, forwards quoted arguments… |
+| herdr pane names the codex agent | install › a herdr pane names the codex agent on the launcher |
+| default does not shadow codex | install › by default no codex wrapper is installed |
+| reinstall and uninstall preserve a user replacement | reinstall and uninstall › … keeps a modified launcher |
+| existing command rejected before installation | install › an existing command that is not ours is rejected… |
+| terminal termination cleans the private session | lifecycle › terminating the launcher stops the session and removes the socket… |
+| normal exit keeps the CLI status and cleans up | lifecycle › a normal exit keeps Codex's exit code and cleans the private session |
+
+Codex-specific changes: every path in the private tmux config is shell-quoted (the original broke
+on a TMPDIR with spaces, `#`, `'` or `$`); the runtime directory lives under the system temp dir
+with a `/tmp` fallback when the socket path would be too long; thread prefixes match with
+`substr(id, 1, n)` instead of `LIKE`; uninstall removes the installed tree (launchers changed by
+the user are still kept).
+
 ## Intentional behavior changes
 
 | Change | Before | Now | Why |

@@ -1,0 +1,7 @@
+{"type":"session_meta","payload":{"id":"12345678-1234-1234-1234-123456789abc","cwd":"/golden/my-app"}}
+{"type":"turn_context","payload":{"cwd":"/golden/my-app","model":"gpt-6-astra","effort":"max"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":90620,"cached_input_tokens":58240},"last_token_usage":{"input_tokens":31990,"cached_input_tokens":30592,"total_tokens":78000},"model_context_window":243200}}}
+this line is not json
+{"type":"event_msg","payload":{"type":"token_count","info":null,"rate_limits":{"limit_id":"codex","primary":{"used_percent":41,"window_minutes":300},"secondary":null}}}
+{"type":"event_msg","payload":{"type":"token_count","info":null,"rate_limits":{"limit_id":"other","primary":{"used_percent":99,"window_minutes":10080}}}}
+{"type":"event_msg","payload":{"type":"thread_settings_applied","thread_settings":{"model":"gpt-6-sol","reasoning_effort":"xhigh","cwd":"/golden/my-app"}}}
