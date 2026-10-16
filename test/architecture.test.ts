@@ -108,3 +108,88 @@ describe("domain boundary", () => {
 		}
 	});
 });
+
+const SRC_ROOT = path.join(import.meta.dir, "..", "src");
+const APPLICATION_ROOT = path.join(SRC_ROOT, "application");
+// Layers the application must never reach: it depends only on itself and the domain.
+const FORBIDDEN_LAYERS = ["infrastructure", "harnesses", "cli"];
+
+/** Every rule the application layer breaks: adapter-layer imports, packages and runtime modules, host globals. */
+function applicationViolations(root: string, srcRoot: string): string[] {
+	const violations: string[] = [];
+	const allowed = [root, path.join(srcRoot, "domain")];
+	for (const file of tsFiles(root)) {
+		const rel = path.relative(root, file);
+		const code = readFileSync(file, "utf8")
+			.replace(/\/\*[\s\S]*?\*\//g, "")
+			.replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+		for (const pattern of SPECIFIER) {
+			for (const match of code.matchAll(pattern)) {
+				const spec = match[1] ?? "";
+				if (!spec.startsWith(".")) {
+					violations.push(`${rel}: imports "${spec}" (only relative imports of src/application and src/domain are allowed)`);
+					continue;
+				}
+				const target = path.resolve(path.dirname(file), spec);
+				const layer = FORBIDDEN_LAYERS.find((name) => {
+					const dir = path.join(srcRoot, name);
+					return target === dir || target.startsWith(`${dir}${path.sep}`);
+				});
+				if (layer) violations.push(`${rel}: imports "${spec}" from src/${layer}`);
+				else if (!allowed.some((dir) => target === dir || target.startsWith(`${dir}${path.sep}`))) {
+					violations.push(`${rel}: imports "${spec}" from outside src/application and src/domain`);
+				}
+			}
+		}
+		const host = HOST_GLOBAL.exec(code);
+		if (host) violations.push(`${rel}: uses host global "${host[0].replace(/\s/g, "")}"`);
+	}
+	return violations;
+}
+
+describe("application boundary", () => {
+	test("src/application imports only itself and the domain, and touches no host globals", () => {
+		expect(tsFiles(APPLICATION_ROOT).length).toBeGreaterThan(0);
+		expect(applicationViolations(APPLICATION_ROOT, SRC_ROOT)).toEqual([]);
+	});
+
+	test("the scanner catches every kind of violation", () => {
+		const src = mkdtempSync(path.join(tmpdir(), "oms-arch-app-"));
+		try {
+			const app = path.join(src, "application");
+			for (const dir of ["application", "domain", "infrastructure", "harnesses", "cli"]) {
+				mkdirSync(path.join(src, dir));
+			}
+			const files: Record<string, string> = {
+				"infra.ts": 'import { x } from "../infrastructure/git.ts";\n',
+				"harness.ts": 'export { y } from "../harnesses/omp/index.ts";\n',
+				"cli.ts": 'import { z } from "../cli/demo.ts";\n',
+				"node.ts": 'import { readFileSync } from "node:fs";\n',
+				"bun.ts": 'import { $ } from "bun";\n',
+				"bunsqlite.ts": 'import { Database } from "bun:sqlite";\n',
+				"pkg.ts": 'export { x } from "some-package";\n',
+				"dynamic.ts": 'export const m = () => import("node:path");\n',
+				"outside.ts": 'import { a } from "../../elsewhere.ts";\n',
+				"global.ts": "export const w = Bun.file('x');\n",
+				"proc.ts": "export const e = process.env;\n",
+				"clean.ts":
+					'// process.env and Bun.file are only mentioned here\nimport type { A } from "../domain/a.ts";\nimport { b } from "./infra-free.ts";\nexport const url = "https://example.com";\n',
+			};
+			for (const [name, body] of Object.entries(files)) writeFileSync(path.join(app, name), body);
+			const found = applicationViolations(app, src);
+			expect(found).toContain('infra.ts: imports "../infrastructure/git.ts" from src/infrastructure');
+			expect(found).toContain('harness.ts: imports "../harnesses/omp/index.ts" from src/harnesses');
+			expect(found).toContain('cli.ts: imports "../cli/demo.ts" from src/cli');
+			for (const name of ["node.ts", "bun.ts", "bunsqlite.ts", "pkg.ts", "dynamic.ts"]) {
+				expect(found.filter((v) => v.startsWith(`${name}: imports`))).toHaveLength(1);
+			}
+			expect(found).toContain('outside.ts: imports "../../elsewhere.ts" from outside src/application and src/domain');
+			expect(found).toContain('global.ts: uses host global "Bun."');
+			expect(found).toContain('proc.ts: uses host global "process."');
+			expect(found.filter((v) => v.startsWith("clean.ts"))).toEqual([]);
+			expect(found).toHaveLength(11);
+		} finally {
+			rmSync(src, { recursive: true, force: true });
+		}
+	});
+});

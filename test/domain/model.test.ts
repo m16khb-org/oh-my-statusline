@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { toDirInfo } from "../../src/domain/model/dir.ts";
 import { type HarnessId, toSnapshot } from "../../src/domain/model/snapshot.ts";
 import { rgb, rgbFromHex, rgbToHex, toPercentage, toTokenAmount } from "../../src/domain/model/values.ts";
 
@@ -212,5 +213,32 @@ describe("toSnapshot robustness", () => {
 				startedAtMs: null,
 			},
 		]);
+	});
+});
+
+describe("toDirInfo (claude/omp/opencode directory label)", () => {
+	const top = "/home/you/src/my-app";
+	test("the checkout root is the repository name; below it, the relative path", () => {
+		expect(toDirInfo({ cwd: top, top, main: top })).toEqual({ name: "my-app", relative: "", worktree: null });
+		expect(toDirInfo({ cwd: `${top}/a/b/c/`, top, main: top })).toEqual({ name: "my-app", relative: "a/b/c", worktree: null });
+	});
+
+	test("a harness-known repository name wins over the folder name (self-hosted remotes leave it empty)", () => {
+		expect(toDirInfo({ cwd: "/w/checkout", top: "/w/checkout", main: "/w/checkout", repoName: "my-app" }).name).toBe("my-app");
+		expect(toDirInfo({ cwd: "/w/checkout", top: "/w/checkout", main: "/w/checkout", repoName: "" }).name).toBe("checkout");
+	});
+
+	test("a linked worktree shows the main checkout's name and the worktree folder", () => {
+		expect(toDirInfo({ cwd: "/home/you/wt/fix-login/src", top: "/home/you/wt/fix-login", main: top })).toEqual({
+			name: "my-app",
+			relative: "src",
+			worktree: "fix-login",
+		});
+	});
+
+	test("outside a repository the directory is the folder; the filesystem root is /", () => {
+		expect(toDirInfo({ cwd: "/tmp/scratch" })).toEqual({ name: "scratch", relative: "", worktree: null });
+		expect(toDirInfo({ cwd: "/" })).toEqual({ name: "/", relative: "", worktree: null });
+		expect(toDirInfo({ cwd: "/elsewhere/x", top, main: top }).name).toBe("x");
 	});
 });
