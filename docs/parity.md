@@ -139,6 +139,32 @@ omp-specific changes: the widget key and install directory are `oh-my-statusline
 carry `usedPct` in percent and a `null` reset when unknown; git status is parsed once per refresh
 (it was parsed twice); glyphs come from `config.json` (lowest), then config.toml, then env.
 
+## OpenCode (`test/harnesses/opencode/`)
+
+OpenCode 2.x resolves a `{ package: "./oh-my-statusline" }` directory plugin through
+`Bun.resolveSync(<dir>/tui, <dir>)` (`@opencode/plugin/dist/host.js`), so the installer writes a
+root `tui.tsx` that re-exports `src/harnesses/opencode/tui.tsx`. Checked against OpenCode 2.0.30
+in a temp config directory: the plugin drew the demo rows and, in this repository, the real
+directory and git chips. The 2.0.30 plugin runtime provides the `Bun` global, but the harness
+still runs git through `node:child_process` and measures with `Bun?.stringWidth ?? cellWidth`,
+because `@opencode/util` also ships a Node runtime variant.
+
+| Original (`install.test.ts`, `render.test.ts`) | Covered by |
+|---|---|
+| copies the plugin and registers it; `--plain`; keeps other plugins, adds nothing twice; leaves a foreign dir alone; refuses non-array plugins | install.test › install |
+| uninstall restores the previous list; drops the plugins key when there was none; keeps a status line entry that was there; a plugin added meanwhile survives; nothing installed / foreign dir | install.test › uninstall |
+| rejects an unknown option | not ported here: argument parsing belongs to the unified CLI |
+| git ×3 | git-watcher.test (shared parsers) |
+| context usage ×3, directory label ×4, counts chip, demo, chips off, session without cost, model chip | snapshot.test, view.test |
+| text metrics | runtime.test |
+| options | options.test |
+| minimumWidth, narrow ladder | view.test › width; test/domain/render.test.ts |
+
+OpenCode-specific changes: the plugin directory and entry are `oh-my-statusline`; the git watcher
+finds the root with `findGitRoot` and re-reads once after a directory change mid-run, discarding the
+old directory's result; the `◈` count includes sibling and parent sessions (the client's `family()`
+returns the whole tree), which is now documented in `view.ts`.
+
 ## Intentional behavior changes
 
 | Change | Before | Now | Why |
