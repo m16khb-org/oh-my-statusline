@@ -20,6 +20,24 @@ the runtime into the harness's own directory, so the clone is only needed to run
 `./install.sh` stops with a message when `bun` is not on `PATH`. macOS and Linux are the platforms CI runs on.
 The runtime needs no `bun install`; that is only for development.
 
+### Windows: use WSL2
+
+Native Windows is not supported: the install scripts are POSIX `sh`, the Codex launcher needs tmux and `/bin/sh`,
+and the directory chip reads `/`-separated paths. Inside [WSL2](https://learn.microsoft.com/windows/wsl/install)
+it is plain Linux, so the Linux instructions apply. This setup has not been tested on a real WSL2 machine; the
+ubuntu CI job (all tests, including install/uninstall round trips and a real tmux session) is the evidence.
+
+- Install everything inside WSL: the agents (Claude Code, Codex, omp, OpenCode), Bun, and this repository. An
+  agent started on the Windows side does not read a status line installed in WSL.
+- Codex: `sudo apt install tmux` inside WSL.
+- Fonts: Windows Terminal draws the text, so install a Nerd Font on Windows and select it in the WSL profile,
+  or install with `--plain`.
+- Theme: for Claude Code and Codex, `theme = "auto"` reads the macOS appearance only, so in WSL it is always
+  `dark`. With a light terminal set `theme = "light"` in config.toml or `STATUSLINE_THEME=light`. omp and
+  OpenCode follow their own theme.
+- Keep repositories on the Linux file system (`~/…`), not under `/mnt/c/…`; git is much slower across that
+  boundary, so the git chip updates late.
+
 ## Install
 
 ```sh

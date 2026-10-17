@@ -33,7 +33,8 @@ where, on which branch, what the session has cost, and how much context and plan
 ## Quick start
 
 You need [Bun](https://bun.sh) on macOS or Linux and the agents you use. Codex also needs `tmux`; `gh` or
-`glab` adds the pull request chip.
+`glab` adds the pull request chip. On Windows, install and run everything inside WSL2; native Windows is not
+supported ([details](INSTALL.md#windows-use-wsl2)).
 
 ```sh
 git clone https://github.com/m16khb-org/oh-my-statusline.git

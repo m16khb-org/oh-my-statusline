@@ -32,7 +32,8 @@
 ## 빠르게 시작하기
 
 macOS나 Linux에 [Bun](https://bun.sh)과 쓰려는 에이전트가 있으면 됩니다. Codex에는 `tmux`도 필요하고,
-`gh`나 `glab`이 있으면 PR 칩이 나타납니다.
+`gh`나 `glab`이 있으면 PR 칩이 나타납니다. Windows에서는 WSL2 안에 모두 설치해서 쓰세요. Windows에서 바로
+실행하는 것은 지원하지 않습니다([자세히](INSTALL.md#windows-use-wsl2)).
 
 ```sh
 git clone https://github.com/m16khb-org/oh-my-statusline.git
