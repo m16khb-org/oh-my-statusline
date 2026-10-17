@@ -74,7 +74,7 @@ export function fakeOmp(cwd: string, settings: object = {}) {
 	return { pi, host, overrides, widgets, ctx, emit, state };
 }
 
-type Widget = { render(width: number): readonly string[] };
+type Widget = { render(width: number): readonly string[]; describe(cx: { cols: number }): { k: string; p: Record<string, unknown> } };
 
 /** Instantiate the widget the way omp does and draw it once. */
 export function mount(content: unknown): { widget: Widget; renders: number } {

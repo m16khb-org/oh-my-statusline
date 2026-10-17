@@ -91,6 +91,18 @@ export interface OmpTui {
 	requestRender(): void;
 }
 
+/** What omp's native-terminal backend (Tern Surface Protocol) passes to `describe`; only the width is read. */
+export interface DescribeContext {
+	readonly cols: number;
+}
+
+/**
+ * The Tern Surface Protocol nodes the widget describes itself with: its rows as one `ansi` block, or a
+ * hidden column when there is nothing to draw. A widget that does not describe itself is sent as a
+ * `rows` node, which Tern marks with a `fallback` badge.
+ */
+export type NativeNode = { k: "ansi"; p: { text: string; cols: number } } | { k: "col"; p: { hidden: true } };
+
 export interface SettingHandle {
 	override(scope: unknown, value: unknown): void;
 }

@@ -37,7 +37,9 @@ import { nextPromptCache, type PromptCache, promptCacheState } from "./cache.ts"
 import type {
 	AssistantMessage,
 	ContextUsage,
+	DescribeContext,
 	HostModules,
+	NativeNode,
 	OmpApi,
 	OmpContext,
 	OmpModel,
@@ -64,6 +66,9 @@ const COMMAND_TIMEOUT_MS = 10_000;
 /** Built-in status segments this status line does not replace. */
 const NATIVE_LEFT = ["vim", "mode", "collab", "stream"];
 const NATIVE_RIGHT = ["session_name"];
+
+/** The described widget when it draws nothing: mounted but not laid out. */
+const HIDDEN_NODE: NativeNode = { k: "col", p: { hidden: true } };
 
 /** "Claude Opus 5.5" → "Opus 5.5"; a trailing "(…)" is dropped. */
 export function modelLabel(model: OmpModel): string {
@@ -301,13 +306,24 @@ export default async function ompStatusline(pi: OmpApi, hostModules?: HostModule
 			WIDGET_KEY,
 			(t: OmpTui) => {
 				tui = t;
+				/** The last description, kept while the rows are the same array so omp skips the node. */
+				let described: { rows: readonly string[]; node: NativeNode } | undefined;
 				// Same array while nothing changed, so omp can skip the repaint.
+				const render = (width: number): readonly string[] => {
+					if (!snapshot) return [];
+					if (rendered?.width === width) return rendered.rows;
+					rendered = { width, rows: renderRows(snapshot, width) };
+					return rendered.rows;
+				};
 				return {
-					render(width: number): readonly string[] {
-						if (!snapshot) return [];
-						if (rendered?.width === width) return rendered.rows;
-						rendered = { width, rows: renderRows(snapshot, width) };
-						return rendered.rows;
+					render,
+					// Native terminals (Tern) take the rows as an `ansi` node; without `describe`, omp sends
+					// them as a `rows` fallback node, which Tern marks with a "fallback" badge.
+					describe(cx: DescribeContext): NativeNode {
+						const rows = render(cx.cols);
+						if (rows.length === 0) return HIDDEN_NODE;
+						if (described?.rows !== rows) described = { rows, node: { k: "ansi", p: { text: rows.join("\n"), cols: cx.cols } } };
+						return described.node;
 					},
 					invalidate(): void {
 						rendered = undefined;

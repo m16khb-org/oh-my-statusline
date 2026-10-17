@@ -105,6 +105,18 @@ describe("widget", () => {
 		expect(widget.render(10)).toEqual([]);
 	});
 
+	test("native terminals get the rows as one ansi node, never the rows fallback", async () => {
+		const { h } = await started();
+		const { widget } = mount(h.widgets[0]?.content);
+		const node = widget.describe({ cols: 160 });
+		expect(node).toEqual({ k: "ansi", p: { text: widget.render(160).join("\n"), cols: 160 } });
+		// The same object while nothing changed, so omp skips the node; a new width redescribes.
+		expect(widget.describe({ cols: 160 })).toBe(node);
+		expect(widget.describe({ cols: 60 }).p.text).toBe(widget.render(60).join("\n"));
+		// Below the minimum width the widget is mounted but hidden.
+		expect(widget.describe({ cols: 10 })).toEqual({ k: "col", p: { hidden: true } });
+	});
+
 	test("invalidate redraws, and a tick that changes nothing requests no repaint", async () => {
 		const { h } = await started();
 		const mounted = mount(h.widgets[0]?.content);
