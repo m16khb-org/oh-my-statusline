@@ -162,6 +162,8 @@ describe("prompt cache", () => {
 	});
 
 	test("a successful cache-warmer replay restarts the lifetime; a failed one or another model's does not", async () => {
+		// A frozen clock: the replay restarts a full hour, which a second ticking by would make 59m.
+		setSystemTime(new Date(Date.now()));
 		const { h, c, rows } = await started();
 		await h.emit("message_end", reply({}), c);
 		await h.emit("after_provider_response", { status: 500 }, c);
