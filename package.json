@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Unified two-row powerline statusline for AI coding agents (Claude Code, Codex, omp, OpenCode)",
   "type": "module",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",

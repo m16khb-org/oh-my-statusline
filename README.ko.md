@@ -1,7 +1,7 @@
 # oh-my-statusline
 
 [![test](https://github.com/m16khb-org/oh-my-statusline/actions/workflows/test.yml/badge.svg)](https://github.com/m16khb-org/oh-my-statusline/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Bun](https://img.shields.io/badge/runtime-Bun-black.svg)](https://bun.sh)
 
 **AI 코딩 에이전트 네 개에 쓰는 상태 줄 하나입니다.** [Claude Code](https://code.claude.com/docs/en/statusline),
@@ -221,4 +221,19 @@ bun run bench          # 성능 수치, docs/performance.md 참고
 
 ## 라이선스
 
-[MIT](LICENSE)
+GPL-3.0-or-later. 전문은 [LICENSE](LICENSE)를 참고합니다.
+
+Copyright (C) 2026 m16khb
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
