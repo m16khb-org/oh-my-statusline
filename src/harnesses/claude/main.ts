@@ -227,7 +227,7 @@ export async function runClaude(args: string[], stdin: string, deps: ClaudeDeps)
 function spawnRefresh(args: string[]): void {
 	try {
 		// Detached (setsid) with ignored stdio, so the helper outlives this render and nothing keeps it waiting.
-		Bun.spawn([process.execPath, import.meta.path, "--refresh", ...args], { stdio: ["ignore", "ignore", "ignore"], detached: true }).unref();
+		Bun.spawn([process.execPath, import.meta.path, "--refresh", ...args], { stdio: ["ignore", "ignore", "ignore"], detached: true, windowsHide: true }).unref();
 	} catch {}
 }
 

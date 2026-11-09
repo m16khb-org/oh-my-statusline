@@ -23,6 +23,9 @@ export const run: CommandRunner = async (cmd, opts = {}) => {
 			stderr: "ignore",
 			timeout: opts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
 			killSignal: "SIGKILL",
+			// On Windows a console child of a console-less parent (the detached refresh helper) would otherwise
+			// get a new console window, which flashes a terminal for every git/gh call.
+			windowsHide: true,
 		});
 		const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
 		return code === 0 ? out : null;
